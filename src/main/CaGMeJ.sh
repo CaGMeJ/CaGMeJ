@@ -2,7 +2,7 @@
 #$ -cwd
 
 
-script_dir=/home/kks_th/CaGMeJ/2.1.0/main
+script_dir=SCRIPT_DIR/main
 shellscript_dir=$script_dir/shellscript
 
 source $shellscript_dir/option_analysis.sh "$@"
