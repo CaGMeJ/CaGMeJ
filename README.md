@@ -6,7 +6,7 @@ Parabricksを使うことでGPUによる高速なゲノム解析を可能とし�
 Parabricksについては https://docs.nvidia.com/clara/parabricks/v3.5/index.html を参考にしてください。  
 
 Install
-========
+--------
 
 install.shを修正してインストールしてください。
 
@@ -15,7 +15,7 @@ qsub install.sh
 ```
 
 Test
-=====
+-----
 
 ```
 bash build/test_dna.sh
@@ -23,7 +23,7 @@ bash build/test_rna.sh
 ```
 
 Usage
-=====
+-----
 
 DNA
 
