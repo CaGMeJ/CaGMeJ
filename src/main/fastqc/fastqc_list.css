@@ -1,0 +1,36 @@
+.arrow_left{
+ float: left;
+ margin: 5px;
+ border-right: 20px solid #000000;
+ border-top: 10px solid transparent;
+ border-bottom: 10px solid transparent;
+}
+.arrow_left:hover{
+ opacity:0.5;
+}
+
+.arrow_right{
+ float: left;
+ margin:5px;
+ border-left: 20px solid #000000;
+ border-top: 10px solid transparent;
+ border-bottom: 10px solid transparent;
+}
+.arrow_right:hover{
+ opacity:0.5;
+}
+
+.table{
+    border-collapse: separate;
+    border-spacing: 5px 0px;
+    table-layout:fixed;
+}
+.circle{
+    width:13px;
+    height:13px;
+    border-radius: 50%;
+
+}
+td{
+    word-wrap:break-word;
+}%
