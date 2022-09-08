@@ -1,11 +1,12 @@
-#CaGMeJ
-
+CaGMeJ
+=======
 
 CaGMeJ(Cancer Genomic Medicine in Japan)はWGS解析パイプラインです。  
 Parabricksを使うことでGPUによる高速なゲノム解析を可能とします。  
 Parabricksについては https://docs.nvidia.com/clara/parabricks/v3.5/index.html を参考にしてください。  
 
-##Install
+Install
+========
 
 install.shを修正してインストールしてください。
 
@@ -13,14 +14,16 @@ install.shを修正してインストールしてください。
 qsub install.sh
 ```
 
-##Test
+Test
+=====
 
 ```
 bash build/test_dna.sh
 bash build/test_rna.sh
 ```
 
-##Usage
+Usage
+=====
 
 DNA
 
