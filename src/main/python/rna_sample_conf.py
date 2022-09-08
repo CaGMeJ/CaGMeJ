@@ -16,7 +16,7 @@ htseq_list = sc.expression_conf(output_dir)
 fusion_list = sc.fusion
 
 fastq_list = sc.fastq_list
-star_dir = output_dir + "/rna_fq2bam"
+star_dir = output_dir + "/star"
 markdup_files = list(map(lambda sample_name: star_dir + "/" + sample_name + "/" + sample_name + ".Aligned.sortedByCoord.out.bam", fastq_list.keys()))
 sc.bam_csv(output_dir, markdup_files)
 star_enable = "true" if len(sc.fastq_list) else "false"
