@@ -129,6 +129,9 @@ process htseq{
     output:
     val "${sample_name}.count.txt" into count_files
     file "check.completed.txt"
+
+     when:
+     params.expression_analysis_enable
 """
 deseq2_img=${params.img_dir}/$params.deseq2_img
 sample_name=$sample_name.sample_name

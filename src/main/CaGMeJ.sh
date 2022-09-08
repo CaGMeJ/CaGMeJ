@@ -2,7 +2,7 @@
 #$ -cwd
 
 
-script_dir=SCRIPT_DIR/main
+script_dir=SCRIPT_DIR/build/main
 shellscript_dir=$script_dir/shellscript
 
 source $shellscript_dir/option_analysis.sh "$@"

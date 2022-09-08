@@ -76,6 +76,10 @@ else
     cp ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.${REGION}.txt ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${REGION}.${build_version}_multianno.txt
 fi
     #rm ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.${REGION}.txt
+
+if [ ! -s ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${REGION}.${build_version}_multianno.txt ]; then
+    exit 1
+fi
 }
 
 

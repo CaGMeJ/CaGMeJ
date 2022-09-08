@@ -1,7 +1,7 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
 module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$SINGULARITY_BINDPATH,/home,/share
+export SINGULARITY_BINDPATH=/cshare1,/home,/share
 set -e
 set -xv
 

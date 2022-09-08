@@ -2,11 +2,11 @@
 #$ -cwd
 #$ -l s_vmem=128G 
 
-pipeline_dir=SCRIPT_DIR/main
-tool_dir=SCRIPT_DIR/tool
-conda_dir=SCRIPT_DIR/miniconda3
-img_and_csv_conf=SCRIPT_DIR/main/config/img_and_csv.cfg
-img_and_csv_conf_rna=SCRIPT_DIR/main/config/img_and_csv_rna.cfg
+pipeline_dir=SCRIPT_DIR/build/main
+tool_dir=SCRIPT_DIR/build/tool
+conda_dir=SCRIPT_DIR/build/miniconda3
+img_and_csv_conf=SCRIPT_DIR/build/main/config/img_and_csv.cfg
+img_and_csv_conf_rna=SCRIPT_DIR/build/main/config/img_and_csv_rna.cfg
  
 set -xv
 set -e
