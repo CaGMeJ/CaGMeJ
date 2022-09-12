@@ -27,6 +27,21 @@ function print_meta_info () {
     echo $info
 }
 
+function table_annovar () {
+annovar_enable=$1
+
+if ${annovar_enable} ;then
+    ${annovar}/table_annovar.pl --outfile ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate \
+                               -buildver ${build_version} ${annovar_param} ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.txt ${humandb} || exit $?
+else
+    cp ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.txt ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${build_version}_multianno.txt
+fi
+    #rm ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.${REGION}.txt
+
+if [ ! -s ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${build_version}_multianno.txt ]; then
+    exit 1
+fi
+}
 
 #main
 set -xv
@@ -36,17 +51,26 @@ if [ ! -e  ${output_dir}/mutation/${tumor_name} ]; then
     mkdir -p ${output_dir}/mutation/${tumor_name}
 fi
 
+
+echo -n > ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.txt 
+
+for interval in `cat $interval_list`
+do
+    REGION=$interval 
+    cat ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.${REGION}.txt >>  ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.txt || exit $?
+    
+done
+
+table_annovar $annovar_enable
+
 mut_header=`genomon_mut_header $normal_bam`
 
 print_header=""
 tmp_header=`echo $mut_header | tr "," "\t"` || exit $?
 if $annovar_enable
-then
-    for i in `ls ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.*.${build_version}_multianno.txt`
-    do
-        print_header=`head -n 1 $i | sed -e "s/\tOtherinfo[0-9][0-9]//g"  -e "s/\tOtherinfo[0-9]//g"`
-        break 
-    done
+then    
+    print_header=`head -n 1  ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${build_version}_multianno.txt  | sed -e "s/\tOtherinfo[0-9][0-9]//g"  -e "s/\tOtherinfo[0-9]//g"`    
+    
     tmp_header=`echo "$tmp_header" | cut  -f6- ` || exit $?
     print_header=${print_header}'\t'${tmp_header}
 else
@@ -59,17 +83,12 @@ echo -e "`print_meta_info $software_versions`
 $print_header" \
 > ${output_dir}/mutation/${tumor_name}/${tumor_name}.genomon_mutation.result.txt || exit $?
 
-for interval in `cat $interval_list`
-do
-    REGION=$interval
-    if $annovar_enable
-    then
-        awk 'NR>1 {print}' ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${REGION}.${build_version}_multianno.txt >> ${output_dir}/mutation/${tumor_name}/${tumor_name}.genomon_mutation.result.txt || exit $?
-    else
-        cat ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${REGION}.${build_version}_multianno.txt >> ${output_dir}/mutation/${tumor_name}/${tumor_name}.genomon_mutation.result.txt || exit $?
-    fi
-done
-
+if $annovar_enable
+then
+    awk 'NR>1 {print}' ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${build_version}_multianno.txt >> ${output_dir}/mutation/${tumor_name}/${tumor_name}.genomon_mutation.result.txt || exit $?
+else
+    cat ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${build_version}_multianno.txt >> ${output_dir}/mutation/${tumor_name}/${tumor_name}.genomon_mutation.result.txt || exit $?
+fi
 mutil_filter_option="-i ${output_dir}/mutation/${tumor_name}/${tumor_name}.genomon_mutation.result.txt 
                     -o ${output_dir}/mutation/${tumor_name}/${tumor_name}.genomon_mutation.result.filt.txt"
 
@@ -80,3 +99,6 @@ else
 fi
 
 singularity exec $genomon_img mutil filter $mutil_filter_option || exit $?
+
+rm ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.txt || exit $?
+rm ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${build_version}_multianno.txt || exit $?

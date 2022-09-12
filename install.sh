@@ -1,3 +1,7 @@
+#$ -cwd
+#$ -l s_vmem=20G
+set -xv
+set -e
 SCRIPT_DIR=`pwd`
 ANNOVAR=
 HUMANDB=

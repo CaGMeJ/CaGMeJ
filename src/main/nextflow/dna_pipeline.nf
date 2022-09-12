@@ -313,6 +313,7 @@ sample_name=$sample_name_bam_file.sample_name
 output_dir=$output_dir
 ref_fa=$ref_fa
 sleep_time=$sleep_time
+picard_img=${params.img_dir}/${params.picard_img}
 source ${job_script}/CollectMultipleMetrics.sh
 echo -n > check.completed.txt
 """
@@ -1204,11 +1205,6 @@ mutfilter_realignment_params='${params.mutfilter_realignment_params}'
 mutfilter_indel_params='${params.mutfilter_indel_params}'
 mutfilter_indel_samtools_params='${params.mutfilter_indel_samtools_params}'
 mutfilter_breakpoint_params='${params.mutfilter_breakpoint_params}'
-annovar=${params.annovar}
-build_version=${params.build_version}
-humandb=${params.humandb}
-annovar_enable=${params.annovar_enable}
-annovar_param='${params.annovar_param}'
 REGION=${interval}
 ref_fa=${ref_fa}
 output_dir=${params.output_dir}
@@ -1239,6 +1235,11 @@ normal_bam=$tumor_normal_name.normal_bam
 sleep_time=${params.sleep_time}
 mutil_single_params='${params.mutil_single_params}'
 mutil_pair_params='${params.mutil_pair_params}'
+annovar=${params.annovar}
+build_version=${params.build_version}
+humandb=${params.humandb}
+annovar_enable=${params.annovar_enable}
+annovar_param='${params.annovar_param}'
 source ${params.job_script}/genomon_mutation_merge.sh
 echo -n > check.completed.txt
 """

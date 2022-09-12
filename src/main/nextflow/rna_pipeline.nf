@@ -14,7 +14,7 @@ Channel
 Channel
    .fromPath(htseq_csv)
    .splitCsv(header: true, sep: ",")
-   .set { htseq_names }
+   .into { htseq_names; sample_name_bam_file_ngscheckmate }
 
 Channel
    .fromPath(deseq2_csv)
@@ -83,7 +83,7 @@ process star{
     val  fastq from fastq_files_star
  
     output:
-    val "${fastq.sample_name}.Aligned.sortedByCoord.out.bam" into bam_files_fusion, bam_files_htseq
+    val "${fastq.sample_name}.Aligned.sortedByCoord.out.bam" into bam_files_fusion, bam_files_htseq, bam_files_NCM
     file "check.completed.txt"
 
     """
@@ -93,9 +93,56 @@ process star{
     STAR_img=${params.img_dir}/${params.STAR_img}
     genome_lib_dir=${params.genome_lib_dir} 
     star_option="$params.star_option"
+    picard_img=${params.img_dir}/${params.picard_img}
     source ${params.job_script}/star.sh
     echo -n > check.completed.txt
     """
+}
+
+process NCM_pileup{
+
+    input:
+    each sample_name from sample_name_bam_file_ngscheckmate
+    val dummy  from params.star_enable ? bam_files_NCM.collect() : Channel.of(1)
+
+    output:
+    file "check.completed.txt"
+    val "${sample_name.sample_name}.vcf" into out_NCM
+
+    when:
+    params.ngscheckmate_enable
+"""
+sleep_time="${params.sleep_time}"
+ngscheckmate_enable="${params.ngscheckmate_enable}"
+NCM_mpileup_option="${params.NCM_mpileup_option}"
+NCM_bed="${params.NCM_bed}"
+ref_fa="${params.ref_fa}"
+ngscheckmate_img=${params.img_dir}/${params.ngscheckmate_img}
+sample_name=$sample_name.sample_name
+bam_file=$sample_name.bam_file
+output_dir=${params.output_dir}
+source ${params.job_script}/NCM_pileup.sh
+echo -n > check.completed.txt
+"""
+}
+
+
+process NCM_run{
+
+    input:
+    val dummy from out_NCM.collect()
+
+    output:
+    file "check.completed.txt"
+"""
+sleep_time="${params.sleep_time}"
+NCM_mpileup_option="${params.NCM_mpileup_option}"
+NCM_bed="${params.NCM_bed}"
+ngscheckmate_img=${params.img_dir}/${params.ngscheckmate_img}
+output_dir=${params.output_dir}
+source ${params.job_script}/NCM_run.sh
+echo -n > check.completed.txt
+"""
 }
 
 process star_fusion{
@@ -138,6 +185,7 @@ sample_name=$sample_name.sample_name
 output_dir=$params.output_dir
 gtf_file=$params.gtf_file
 sleep_time=$params.sleep_time
+bam_file=$sample_name.bam_file
 source ${params.job_script}/htseq.sh
 echo -n > check.completed.txt
 """

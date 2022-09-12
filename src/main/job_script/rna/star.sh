@@ -3,6 +3,9 @@ export PATH=/usr/local/package/python/3.6.5/bin:$PATH
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
 module load singularity/3.7.0
+export SINGULARITY_BINDPATH=/cshare1,/home,/share
+export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx16g -Xms32m -XX:ConcGCThreads=8"
+
 export SINGULARITY_BINDPATH=$SINGULARITY_BINDPATH,/home,/share
 
 declare -A sample_csv
@@ -47,5 +50,13 @@ singularity exec $STAR_img STAR --genomeDir ${genome_lib_dir} \
 singularity exec $STAR_img samtools sort -@ 8 $output_dir/${sample_name}.Aligned.out.bam \
   -O bam > $output_dir/${sample_name}.Aligned.sortedByCoord.out.bam
 singularity exec $STAR_img samtools index $output_dir/${sample_name}.Aligned.sortedByCoord.out.bam
+
+singularity exec $picard_img java -jar /picard.jar MarkDuplicates \
+      I=$output_dir/${sample_name}.Aligned.sortedByCoord.out.bam \
+      O=$output_dir/${sample_name}.markdup.bam \
+      M=$output_dir/${sample_name}.metrics 
+
+singularity exec $STAR_img samtools index $output_dir/${sample_name}.markdup.bam
+
 rm $output_dir/${sample_name}.Aligned.out.bam
 set +xv
