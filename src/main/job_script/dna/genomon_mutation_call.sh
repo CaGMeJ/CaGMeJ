@@ -66,22 +66,6 @@ function mutfilter () {
 
 }
 
-function table_annovar () {
-annovar_enable=$1
-
-if ${annovar_enable} ;then
-    ${annovar}/table_annovar.pl --outfile ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${REGION} \
-                               -buildver ${build_version} ${annovar_param} ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.${REGION}.txt ${humandb} || exit $?
-else
-    cp ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.${REGION}.txt ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${REGION}.${build_version}_multianno.txt
-fi
-    #rm ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.${REGION}.txt
-
-if [ ! -s ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${REGION}.${build_version}_multianno.txt ]; then
-    exit 1
-fi
-}
-
 
 #main
 set -xv
@@ -110,5 +94,3 @@ else
     mutfilter simplerepeat breakpoint_mutations
 fi
 
-  
-table_annovar $annovar_enable

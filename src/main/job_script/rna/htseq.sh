@@ -17,7 +17,7 @@ fi
 singularity exec $deseq2_img htseq-count -f bam \
             -i gene_name \
             -r pos \
-            ${star_dir}/${sample_name}.Aligned.sortedByCoord.out.bam ${gtf_file} \
+            $bam_file ${gtf_file} \
             > ${output_dir}/${sample_name}.count.txt || exit $?
 
 set +xv 
