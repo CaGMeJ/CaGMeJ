@@ -1,7 +1,7 @@
 sleep $sleep_time
 set -xv
 set +e
-echo -e "sample\tMicrosatelite\tMut-microsatelite\rate%" > $output_dir/mimcall/result.txt
+echo -e "sample\tMicrosatelite\tMut-microsatelite\trate" > $output_dir/mimcall/result.txt
 for tumor_name in `awk 'BEGIN{FS=","}NR>1{print $1}' $mimcall_csv`
 do
    ALL=`grep -v LOW $output_dir/mimcall/${tumor_name}/${tumor_name}.MIMcall.txt  | wc -l`
