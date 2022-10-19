@@ -529,6 +529,31 @@ echo -n > check.completed.txt
 """
 }
 
+process haplotype_annovar{
+
+    input:
+    each sample_name from out_haplotypecaller.collect()
+
+    output:
+    val "${sample_name}"  into out_haplotypecaller_annovar 
+    file "check.completed.txt"
+  
+    when:
+    params.haplotype_annovar_enable
+
+"""
+annovar=$annovar
+annovar_param="$annovar_param"
+humandb="$humandb"
+haplotype_option_list="${haplotype_option_list}"
+sample_name=$sample_name
+output_dir=$output_dir
+build_version=$build_version
+sleep_time=$sleep_time
+source ${job_script}/haplotype_annovar.sh
+echo -n > check.completed.txt
+"""
+}
 
 process parabricks_cnvkit{
 

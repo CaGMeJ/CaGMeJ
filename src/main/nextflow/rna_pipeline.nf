@@ -3,6 +3,8 @@ sample_csv = params.output_dir + "/" + params.sample_csv
 fusion_csv = params.output_dir + "/" + params.fusion_csv
 htseq_csv = params.output_dir + "/" + params.htseq_csv
 deseq2_csv = params.output_dir + "/" + params.deseq2_csv
+genomon_fusion_csv = params.output_dir + "/" + params.genomon_fusion_csv
+genomon_expression_csv = params.output_dir + "/" + params.genomon_expression_csv
 
 params.each({key, value -> println "$key = $value"})
 
@@ -15,6 +17,16 @@ Channel
    .fromPath(htseq_csv)
    .splitCsv(header: true, sep: ",")
    .into { htseq_names; sample_name_bam_file_ngscheckmate }
+
+Channel
+   .fromPath(genomon_fusion_csv)
+   .splitCsv(header: true, sep: ",")
+   .into { sample_name_bam_file_genomon_fusion }
+
+Channel
+   .fromPath(genomon_expression_csv)
+   .splitCsv(header: true, sep: ",")
+   .into { sample_name_bam_file_genomon_expression }
 
 Channel
    .fromPath(deseq2_csv)
@@ -83,7 +95,7 @@ process star{
     val  fastq from fastq_files_star
  
     output:
-    val "${fastq.sample_name}.Aligned.sortedByCoord.out.bam" into bam_files_fusion, bam_files_htseq, bam_files_NCM
+    val "${fastq.sample_name}.Aligned.sortedByCoord.out.bam" into bam_files_fusion, bam_files_htseq, bam_files_NCM, bam_files_genomon_fusion, bam_files_genomon_expression
     file "check.completed.txt"
 
     """
@@ -215,3 +227,54 @@ echo -n > check.completed.txt
 """
 }
 
+
+process genomon_fusion{
+
+    input:
+    each sample_name from sample_name_bam_file_genomon_fusion
+    val dummy  from params.star_enable ? bam_files_genomon_fusion.collect() : Channel.of(1) 
+    output:
+    val "genomonFusion.result.filt.txt" into genomon_fusion_output_files
+    file "check.completed.txt"
+    when:
+    params.genomon_fusion_enable
+"""
+ref_fa=$params.ref_fa
+genomon_rna_img=${params.img_dir}/${params.genomon_rna_img}
+sample_name=$sample_name.sample_name
+bam_file=$sample_name.sample_bam
+sleep_time=$params.sleep_time
+output_dir=$params.output_dir
+refGene_bed=$params.fusion_refGene_bed 
+ensGene_bed=$params.fusion_ensGene_bed 
+refExon_bed=$params.fusion_refExon_bed 
+ensExon_bed=$params.fusion_ensExon_bed
+fusionfusion_option="${params.fusionfusion_option}"
+fusion_utils_filt_option="${params.fusion_utils_filt_option}"
+source ${params.job_script}/genomon_fusion.sh
+echo -n > check.completed.txt
+"""
+}
+
+process genomon_expression{
+
+    input:
+    each sample_name from sample_name_bam_file_genomon_expression
+    val dummy  from params.star_enable ? bam_files_genomon_expression.collect() : Channel.of(1)
+    output:
+    val "genomonExpression.result.txt" into genomon_expression_output_files
+    file "check.completed.txt"
+    when:
+    params.genomon_expression_enable
+"""
+genomon_rna_img=${params.img_dir}/${params.genomon_rna_img}
+sample_name=$sample_name.sample_name
+bam_file=$sample_name.sample_bam
+sleep_time=$params.sleep_time
+output_dir=$params.output_dir
+refExon_ex_bed=$params.expression_refExon_ex_bed
+genomon_expression_option="${params.genomon_expression_option}"
+source ${params.job_script}/genomon_expression.sh
+echo -n > check.completed.txt
+"""
+}

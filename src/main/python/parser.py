@@ -95,8 +95,8 @@ class sample_csv:
                     file.write(sample_name + "," + bam_file + "\n")
 
                for mode in self.sample_conf.keys():
-                    if mode in { "mutation_call", "sv_detection"}:
-                        file.write("[" + mode + "]" + "\n")
+                    if mode in { "mutation_call", "sv_detection", "genomon_fusion", "genomon_expression"}:
+                        file.write("[" + mode.replace("genomon_", "") + "]" + "\n")
                         for config in self.sample_conf[mode]:
                             file.write(config + "\n")
           return bamimport_file
@@ -198,7 +198,7 @@ class sample_csv:
                         normal_bam = self.bam_list[normal_name]
                     file.write(",".join([tumor_name, normal_name] + [tumor_bam, normal_bam]) + "\n")  
 
-     def single_conf_csv(self, output_dir, config_type, enable):
+     def single_conf_csv(self, output_dir, config_type, enable, nucleic_acid_type):
           config_dir = output_dir + "/config/"
           os.makedirs(config_dir, exist_ok=True)
           file_path = config_dir  + "/" + config_type + "_conf.csv"
@@ -212,15 +212,26 @@ class sample_csv:
                    return 0
                for config in self.sample_conf[config_type]:
                     sample_name = config
-                    sample_bam = output_dir \
+                    if nucleic_acid_type == "dna":
+                        sample_bam = output_dir \
                                 + "/bam/" \
                                 + sample_name \
                                 + "/" \
                                 + sample_name \
                                 + ".markdup.bam"
 
-                    assert sample_name in check_sample_name, sample_name + " is not defined."
+                    elif nucleic_acid_type == "rna":
+                        sample_bam = output_dir \
+                                + "/star/" \
+                                + sample_name \
+                                + "/" \
+                                + sample_name \
+                                + ".Aligned.sortedByCoord.out.bam"
+                    else:
+                        print("Unknown nucleic_acid_type: " + nucleic_acid_type)
+                        sys.exit(1)
 
+                    assert sample_name in check_sample_name, sample_name + " is not defined."
                     if sample_name in self.bam_list:
                         sample_bam = self.bam_list[sample_name]
                     file.write(",".join([sample_name, sample_bam]) + "\n")
