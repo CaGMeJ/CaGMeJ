@@ -82,7 +82,7 @@ if [ $target_pipeline = "rna" ]; then
 
     cd $project_dir
 
-    python -B $python_dir/rna_sample_conf.py $sample_conf  $project_dir || exit $?
+    python -B $python_dir/rna_sample_conf.py $sample_conf  $project_dir $nextflow_parabricks_conf  || exit $?
     
 
     nextflow_option="--output_dir $project_dir
