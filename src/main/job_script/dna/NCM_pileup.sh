@@ -14,6 +14,6 @@ fi
 singularity exec $ngscheckmate_img  samtools mpileup $NCM_mpileup_option  -uf $ref_fa  -l $NCM_bed $bam_file | \
 singularity exec $ngscheckmate_img bcftools call -c -  >  ${output_dir}/ngscheckmate/${sample_name}.vcf
 
-if [ ! -s ${output_dir}/ngscheckmate/${sample_name}.vcf ];then
+if [ `grep -v ^# ${output_dir}/ngscheckmate/${sample_name}.vcf  | wc -l` -eq 0  ];then
     exit 1
 fi
