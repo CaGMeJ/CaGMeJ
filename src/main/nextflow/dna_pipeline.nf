@@ -141,7 +141,7 @@ Channel
 Channel
    .fromPath(bam_csv)
    .splitCsv(header: true, sep: ",")
-   .into{ sample_name_bam_file_bammetrics; sample_name_bam_file_CollectMultipleMetrics; sample_name_bam_file_CollectWgsMetrics }
+   .into{ sample_name_bam_file_bammetrics; sample_name_bam_file_CollectMultipleMetrics; sample_name_bam_file_CollectWgsMetrics; sample_name_bam_file_virus_count }
 
 
 Channel
@@ -210,7 +210,7 @@ Channel.fromPath(mimcall_csv)
 
 Channel.fromPath(cnvkit_compare_csv)
        .splitCsv(header: true, sep: ",")
-       .into{tumor_normal_names_cnvkit_compare}
+       .into{tumor_normal_names_cnvkit_compare; tumor_normal_names_cnvkit_compare_purity}
 Channel
    .fromPath(chord_csv)
    .splitCsv(header: true, sep: ",")
@@ -277,7 +277,7 @@ process parabricks_fq2bam{
     input:
     val  fastq from  fastq_files_align
     output:
-    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics
+    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count
     file "check.completed.txt"
     when:
     !params.fastqc_only
@@ -1078,6 +1078,7 @@ process facets_R{
 
    output:
    file "check.completed.txt"
+   val "${tumor_normal_name.tumor}.out.purity.tsv" into out_facets_R
    
 """
 sleep_time=${params.sleep_time}
@@ -1141,6 +1142,7 @@ process cnvkit_compare{
    
     output:
     file "check.completed.txt"
+    val "${tumor_normal_name.tumor}.markdup.cns" into out_cnvkit_compare
     when:
     params.cnvkit_compare_enable
 """
@@ -1160,6 +1162,32 @@ source ${params.job_script}/cnvkit_compare.sh
 echo -n > check.completed.txt
 """
 }
+
+process cnvkit_compare_purity{
+    input:
+    each tumor_normal_name from tumor_normal_names_cnvkit_compare_purity
+    val dummy  from params.parabricks_fq2bam_enable ? bam_files_cnvkit_compare_purity.collect() : Channel.of(1)
+    val dummy2  from out_cnvkit_compare.collect()
+    val dummy3 from out_facets_R.collect()
+   
+    output:
+    file "check.completed.txt"
+    when:
+    params.facets_enable && params.cnvkit_compare_enable && params.cnvkit_compare_purity_enable
+"""
+tumor_name=${tumor_normal_name.tumor}
+tumor_bam=${tumor_normal_name.tumor_bam}
+male_reference_flag=${tumor_normal_name.male_reference_flag}
+sleep_time=${params.sleep_time}
+cnvkit_img=${params.img_dir}/${params.cnvkit_img}
+cnvkit_export_option="${params.cnvkit_export_option}"
+grep_option="${params.grep_option}"
+output_dir=${params.output_dir}
+source ${params.job_script}/cnvkit_compare_purity.sh 
+echo -n > check.completed.txt
+"""
+}
+
 process chord{
     input:
     each sample_name from sample_names_chord
@@ -1345,6 +1373,30 @@ paplot_conf=${params.paplot_conf}
 python_dir=${params.python_dir}
 job_script=${params.job_script}
 source ${params.job_script}/post_analysis_and_pmsignature.sh
+echo -n > check.completed.txt
+"""
+}
+
+process virus_count{
+
+    input:
+    each sample_name_bam_file from sample_name_bam_file_virus_count
+    val dummy  from params.parabricks_fq2bam_enable ? bam_files_virus_count.collect() : Channel.of(1)
+    output:
+    val "virus_count.txt" into virus_count_files
+    file "check.completed.txt"
+    when:
+    params.virus_count_enable
+
+"""
+bam_file=$sample_name_bam_file.bam_file
+sample_name=$sample_name_bam_file.sample_name
+output_dir=$output_dir
+bowtie_ref=$params.bowtie_ref
+sleep_time=$sleep_time
+python_dir=${params.python_dir}
+virus_count_img=${params.img_dir}/${params.virus_count_img}
+source ${job_script}/virus_count.sh
 echo -n > check.completed.txt
 """
 }
