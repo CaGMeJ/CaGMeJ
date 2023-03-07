@@ -26,6 +26,8 @@ class Parser:
                    self.s += S[j]
                    j += 1
                    continue
+                if flag < 0 and S[j] == "\n":
+                       raise ValueError("You forgot to write escape!")
                 if flag3 < 0 and S[j] == "\n":
                    j += 1
                    continue
