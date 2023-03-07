@@ -4,6 +4,7 @@ module load singularity/3.7.0
 export SINGULARITY_BINDPATH=/cshare1,/home,/share
 
 set -xv
+set -e
 output_dir=${output_dir}/cnvkit_compare/$tumor_name 
 cwd=`pwd`
 if [ ! -e  ${output_dir} ]; then
@@ -21,13 +22,31 @@ singularity exec $cnvkit_img cnvkit.py \
             $male_reference \
             $cnvkit_compare_option \
             --output-dir ${output_dir}
- 
-if [ ! -f ${output_dir}/${tumor_name}.markdup.cnr ]; then
-    echo "Not Found: ${output_dir}/${tumor_name}.markdup.cnr" 
+pre_T=`basename $tumor_bam`
+pre_T=${output_dir}/${pre_T%.bam}
+pre_N=`basename $normal_bam`
+pre_N=${output_dir}/${pre_N%.bam}
+for suffix in antitargetcoverage.cnn targetcoverage.cnn
+do
+    for pre in ${pre_T} ${pre_N}
+    do
+        if [ ! -s ${pre}.${suffix} ]; then
+            exit 1
+        fi
+    done
+done
+if [ ! -s ${output_dir}/reference.cnn ]; then
+    exit 1
+fi 
+if [ ! -s ${pre_T}.cnr ]; then
     exit 1
 fi
 
-if [ `cat ${output_dir}/${tumor_name}.markdup.cnr | wc -l` -gt 1 ]; then
+if [ `cat ${pre_T}.cnr | wc -l` -gt 1 ]; then
+
+    if [ ! -s ${pre_T}.cns ]; then
+        exit 1
+    fi
 
     head -n 1  ${output_dir}/${tumor_name}.markdup.cnr > ${output_dir}/${tumor_name}.cnr
     head -n 1  ${output_dir}/${tumor_name}.markdup.cns > ${output_dir}/${tumor_name}.cns
@@ -52,5 +71,10 @@ if [ `cat ${output_dir}/${tumor_name}.markdup.cnr | wc -l` -gt 1 ]; then
 
     rm ${output_dir}/${tumor_name}.cns
     rm ${output_dir}/${tumor_name}.cnr
+    
+    if [ ! -s ${pre_T}.bintest.cns ]; then
+        exit 1
+    fi
+    
 fi
 cd $cwd

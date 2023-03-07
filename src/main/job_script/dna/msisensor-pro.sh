@@ -30,6 +30,19 @@ if $flag ; then
         -t $tumor_bam \
         -n $normal_bam \
         -o $output_dir/msisensor/$tumor_name/tumor_normal
+
+    if [ "`tail -n 2 $output_dir/msisensor/$tumor_name/tumor_normal_dis | awk -F ' ' '{s= s $1}END{print s}'`" != "N:T:" ]; then
+        exit 1
+    fi
+    if [ "`tail -n 2 $output_dir/msisensor/$tumor_name/tumor_normal_dis | awk -F ' ' '{s= s" "NF}END{print s}'`" != " 101 101" ]; then
+        exit 1
+    fi 
+    if [ ! -s $output_dir/msisensor/$tumor_name/tumor_normal_germline ]; then
+        exit 1
+    fi
+    if [ ! -s $output_dir/msisensor/$tumor_name/tumor_normal_somatic ]; then
+        exit 1
+    fi
 #tumor only
 else
     singularity exec $msisensor_img msisensor-pro baseline\

@@ -1078,7 +1078,7 @@ process facets_R{
 
    output:
    file "check.completed.txt"
-   val "${tumor_normal_name.tumor}.out.purity.tsv" into out_facets_R
+   path "${tumor_normal_name.tumor}" into out_facets_R
    
 """
 sleep_time=${params.sleep_time}
@@ -1168,12 +1168,12 @@ process cnvkit_compare_purity{
     each tumor_normal_name from tumor_normal_names_cnvkit_compare_purity
     val dummy  from params.parabricks_fq2bam_enable ? bam_files_cnvkit_compare_purity.collect() : Channel.of(1)
     val dummy2  from out_cnvkit_compare.collect()
-    val dummy3 from out_facets_R.collect()
+    each tumor from out_facets_R.filter{file(it).text == "true\n"}.map(path -> file(path).baseName).collect()
    
     output:
     file "check.completed.txt"
     when:
-    params.facets_enable && params.cnvkit_compare_enable && params.cnvkit_compare_purity_enable
+    params.facets_enable && params.cnvkit_compare_enable && params.cnvkit_compare_purity_enable && tumor_normal_name.tumor == tumor
 """
 tumor_name=${tumor_normal_name.tumor}
 tumor_bam=${tumor_normal_name.tumor_bam}
