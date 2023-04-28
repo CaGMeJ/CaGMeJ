@@ -16,6 +16,7 @@ cnvkit_compare_csv = params.output_dir + '/' + params.cnvkit_csv
 mimcall_csv = params.output_dir + '/' + params.mimcall_csv
 chord_csv = params.output_dir + '/' + params.chord_csv
 fastqc_csv = params.output_dir + '/' + params.fastqc_csv
+survirus_csv = params.output_dir + '/' + params.survirus_csv
 
 genomon_conf = params.genomon_conf
 genomon_sample_conf = params.genomon_sample_conf
@@ -143,6 +144,10 @@ Channel
    .splitCsv(header: true, sep: ",")
    .into{ sample_name_bam_file_bammetrics; sample_name_bam_file_CollectMultipleMetrics; sample_name_bam_file_CollectWgsMetrics; sample_name_bam_file_virus_count }
 
+Channel
+   .fromPath(survirus_csv)
+   .splitCsv(header: true, sep: ",")
+   .into{ sample_name_bam_file_survirus}
 
 Channel
    .fromPath(haplotype_csv)
@@ -277,7 +282,7 @@ process parabricks_fq2bam{
     input:
     val  fastq from  fastq_files_align
     output:
-    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count
+    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count, bam_files_survirus
     file "check.completed.txt"
     when:
     !params.fastqc_only
@@ -1397,6 +1402,33 @@ sleep_time=$sleep_time
 python_dir=${params.python_dir}
 virus_count_img=${params.img_dir}/${params.virus_count_img}
 source ${job_script}/virus_count.sh
+echo -n > check.completed.txt
+"""
+}
+
+process survirus{
+
+    input:
+    each sample_name_bam_file from sample_name_bam_file_survirus
+    each virus_type from Channel.value( params.virus_list )
+    val dummy  from params.parabricks_fq2bam_enable ? bam_files_survirus.collect() : Channel.of(1)
+    output:
+    val "results.remapped.t1.txt" into out_survirus
+    file "check.completed.txt"
+    when:
+    params.survirus_enable
+
+"""
+bam_file=$sample_name_bam_file.sample_bam
+ref_fa=${ref_fa}
+survirus_db_dir=${params.survirus_db_dir}
+virus_type=$virus_type
+sample_name=$sample_name_bam_file.sample_name
+output_dir=$output_dir
+sleep_time=$sleep_time
+THREADS=${params.survirus_threads}
+survirus_img=${params.img_dir}/${params.survirus_img}
+source ${job_script}/survirus.sh
 echo -n > check.completed.txt
 """
 }

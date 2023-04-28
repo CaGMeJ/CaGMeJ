@@ -40,6 +40,7 @@ with open(nf_cfg) as f:
     pmsignature_full_enable = True if t["params"]["pmsignature_full_enable"] == "true" else False
     pmsignature_ind_enable = True if t["params"]["pmsignature_ind_enable"] == "true" else False
     paplot_enable = True if t["params"]["paplot_enable"] == "true" else False
+    survirus_enable = True if t["params"]["survirus_enable"] == "true" else False
 
 #####################
 #
@@ -76,6 +77,7 @@ sc.compare_conf_plus_csv(output_dir, "cnvkit_compare", "male_reference_flag", cn
 sc.compare_conf_csv(output_dir, "gridss", gridss_enable)
 sc.compare_conf_csv(output_dir, "mimcall", mimcall_enable)
 sc.single_conf_csv(output_dir, "chord", chord_enable, "dna")
+sc.single_conf_csv(output_dir, "survirus", survirus_enable, "dna")
 
 parabricks_fq2bam_enable = "true" if len(sc.fastq_list) else "false"
 
