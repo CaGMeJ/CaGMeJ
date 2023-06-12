@@ -85,7 +85,18 @@ if [ ${normal_bam} = None ]; then
 else
     fisher comparison 
 
-    mutfilter realignment mutations "-2 ${normal_bam}"
+    #mutfilter realignment mutations "-2 ${normal_bam}"
+    in_mutation_file=${output_dir}/mutation/${tumor_name}/${tumor_name}.fisher_mutations.${REGION}.txt
+    sort -k2n $in_mutation_file  > ${in_mutation_file}.sorted
+    singularity exec $mutfilter_img python3 $python_dir/mutfilter/mutfilter_realignment.py  \
+               ${in_mutation_file}.sorted \
+               $tumor_bam \
+               $normal_bam \
+               $ref_fa \
+               $read_length \
+               $window \
+               $exclude_sam_flags > ${output_dir}/mutation/${tumor_name}/${tumor_name}.realignment_mutations.${REGION}.txt
+    rm ${in_mutation_file}.sorted
 
     mutfilter indel 
 

@@ -38,6 +38,7 @@ with open(nf_cfg1) as f:
     facets_chr_list = t["params"]["facets_chr_list"]
     genomon_mutation_enable = t["params"]["genomon_mutation_enable"]
     interval_list = t["params"]["interval_list"][1:-1]
+    cram_enable = t["params"]["cram_enable"]
 
 with open(nf_cfg2) as f:
     S = f.read()
@@ -61,12 +62,25 @@ with open(output_dir + "/config/facets_conf.csv") as f:
         if line != "tumor,normal,tumor_bam,normal_bam\n":
             facets_sample_list.append(line.split(",")[0])
 
+bam_sample_list = []
+
+with open(output_dir + "/config/bam_conf.csv") as f:
+    for line in f:
+        if line != "sample_name,bam_file\n":
+            bam_sample_list.append(line.split(",")[0])
+
 if ref_fa_copy_enable == "true":
     my_ref_fa_dir = os.path.dirname(my_ref_fa)
     if os.path.exists(my_ref_fa_dir):
         shutil.rmtree(my_ref_fa_dir)
 
-
+if cram_enable == "true":
+    for sample in  bam_sample_list:
+               file_list = ["{}/bam/{}/{}.markdup.bam".format(output_dir, sample, sample),
+                            "{}/bam/{}/{}.markdup.bam.bai".format(output_dir, sample, sample)]
+    for f in file_list:
+        if os.path.isfile(f):
+            os.remove(f)
 
 if  sequenza_bam2seqz_enable == "true":
     for Chr in expr(chr_list):

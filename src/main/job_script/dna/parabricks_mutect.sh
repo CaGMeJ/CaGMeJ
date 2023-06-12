@@ -57,7 +57,7 @@ fi
 singularity exec $tabix_img bgzip -f ${output_dir}/${sample_name}.mutect.vcf
 singularity exec $tabix_img tabix -f -p vcf ${output_dir}/${sample_name}.mutect.vcf.gz
 
-export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx2g -Xms32m" 
+export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx8g -Xms32m" 
 singularity exec $gatk_img /gatk-4.1.0.0/gatk FilterMutectCalls \
     -O ${output_dir}/${sample_name}.mutect.filtered.vcf.gz \
     -R  $ref_fa \
