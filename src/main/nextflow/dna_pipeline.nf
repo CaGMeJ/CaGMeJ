@@ -142,7 +142,7 @@ Channel
 Channel
    .fromPath(bam_csv)
    .splitCsv(header: true, sep: ",")
-   .into{ sample_name_bam_file_bammetrics; sample_name_bam_file_CollectMultipleMetrics; sample_name_bam_file_CollectWgsMetrics; sample_name_bam_file_virus_count }
+   .into{ sample_name_bam_file_bammetrics; sample_name_bam_file_CollectMultipleMetrics; sample_name_bam_file_CollectWgsMetrics; sample_name_bam_file_virus_count; sample_name_bam_file_cram }
 
 Channel
    .fromPath(survirus_csv)
@@ -282,7 +282,7 @@ process parabricks_fq2bam{
     input:
     val  fastq from  fastq_files_align
     output:
-    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count, bam_files_survirus
+    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count, bam_files_survirus, bam_files_cram
     file "check.completed.txt"
     when:
     !params.fastqc_only
@@ -300,6 +300,31 @@ source ${job_script}/parabricks_fq2bam.sh
 echo -n > check.completed.txt
 """
 }
+
+process bam_to_cram{
+
+    input:
+    each sample_name_bam_file from sample_name_bam_file_cram
+    val dummy  from params.parabricks_fq2bam_enable ? bam_files_cram.collect() : Channel.of(1)
+    output:
+    file "check.completed.txt"
+    when:
+    params.cram_enable
+    
+"""
+bam_file=$sample_name_bam_file.bam_file
+sample_name=$sample_name_bam_file.sample_name
+output_dir=$output_dir
+sleep_time=$sleep_time
+ref_fa=$ref_fa
+cram_view_option="${params.cram_view_option}"
+cram_index_option="${params.cram_index_option}"
+samtools_img=${params.img_dir}/${params.samtools_img}
+source ${job_script}/cram.sh
+echo -n > check.completed.txt
+"""
+}
+
 
 process CollectMultipleMetrics{
 
@@ -1260,6 +1285,11 @@ fisher_pair_params='${params.fisher_pair_params}'
 fisher_single_samtools_params="${params.fisher_single_samtools_params}"
 fisher_pair_samtools_params="${params.fisher_pair_samtools_params}"
 mutfilter_realignment_params='${params.mutfilter_realignment_params}'
+mutfilter_img=${params.img_dir}/${params.mutfilter_img}
+read_length=${params.mutfilter_read_length}
+window=${params.mutfilter_window}
+exclude_sam_flags=${params.mutfilter_exclude_sam_flags}
+python_dir=${params.python_dir}
 mutfilter_indel_params='${params.mutfilter_indel_params}'
 mutfilter_indel_samtools_params='${params.mutfilter_indel_samtools_params}'
 mutfilter_breakpoint_params='${params.mutfilter_breakpoint_params}'
