@@ -1,8 +1,9 @@
 sleep $sleep_time
 export PATH=/usr/local/package/python/3.6.5/bin:$PATH
 source /etc/profile.d/modules.sh
-module use /opt/parabricks/modulefiles/
-module load parabricks_pipeline/$parabricks_version
+module use $modulefiles
+module load $parabricks_version
+export SINGULARITY_BINDPATH=/cshare1,/home,/share
 set -xv
 
 declare -A sample_csv

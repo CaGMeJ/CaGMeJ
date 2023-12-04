@@ -17,6 +17,7 @@ mimcall_csv = params.output_dir + '/' + params.mimcall_csv
 chord_csv = params.output_dir + '/' + params.chord_csv
 fastqc_csv = params.output_dir + '/' + params.fastqc_csv
 survirus_csv = params.output_dir + '/' + params.survirus_csv
+hyperclust_csv = params.output_dir + '/' + params.hyperclust_csv
 
 genomon_conf = params.genomon_conf
 genomon_sample_conf = params.genomon_sample_conf
@@ -234,6 +235,12 @@ Channel
    .fromPath(sv_csv)
    .splitCsv(header: true, sep: ",")
    .into { tumor_normal_names_sv }
+
+Channel
+   .fromPath(hyperclust_csv)
+   .splitCsv(header: true, sep: ",")
+   .into { tumor_normal_names_hyperclust }
+
 process fastqc_check{
 
     input:
@@ -282,7 +289,7 @@ process parabricks_fq2bam{
     input:
     val  fastq from  fastq_files_align
     output:
-    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count, bam_files_survirus, bam_files_cram
+    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count, bam_files_survirus, bam_files_cram, bam_files_hyperclust
     file "check.completed.txt"
     when:
     !params.fastqc_only
@@ -291,6 +298,7 @@ output_dir=$output_dir
 dict="$fastq"
 ref_fa=${ref_fa}
 fq2bam_option="$fq2bam_option"
+modulefiles=$params.modulefiles
 parabricks_version=$parabricks_version
 monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
@@ -366,6 +374,7 @@ bam_file=$sample_name_bam_file.bam_file
 sample_name=$sample_name_bam_file.sample_name
 output_dir=$output_dir
 ref_fa=$ref_fa
+modulefiles=$params.modulefiles
 parabricks_version=$parabricks_version
 monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
@@ -424,7 +433,7 @@ process parabricks_mutect{
      val dummy  from params.parabricks_fq2bam_enable ? bam_files_mutect.collect() : Channel.of(1)
 
     output:
-    val "${tumor_normal_name.tumor}"  into out_mutect
+    val "${tumor_normal_name.tumor}"  into out_mutect, out_mutect2
     val "${tumor_normal_name.tumor}"  into out_mutect_chord 
     file "check.completed.txt"
     when:
@@ -437,6 +446,7 @@ tumor_bam=$tumor_normal_name.tumor_bam
 normal_bam=$tumor_normal_name.normal_bam
 output_dir=$output_dir
 ref_fa=$ref_fa
+modulefiles=$params.modulefiles
 parabricks_version=$parabricks_version
 monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
@@ -493,6 +503,7 @@ sample_name=$sample_name.sample_name
 bam_file=$sample_name.sample_bam
 output_dir=$output_dir
 ref_fa=$ref_fa
+modulefiles=$params.modulefiles
 parabricks_version=$parabricks_version
 monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
@@ -548,6 +559,7 @@ sample_bam=${sample.sample_bam}
 output_dir=$output_dir
 ref_fa=$ref_fa
 haplotype_option_list="${haplotype_option_list}"
+modulefiles=$params.modulefiles
 parabricks_version=$parabricks_version
 monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
@@ -602,6 +614,7 @@ tumor_name=$tumor_normal_name.tumor
 tumor_bam=$tumor_normal_name.tumor_bam
 output_dir=$output_dir
 ref_fa=$ref_fa
+modulefiles=$params.modulefiles
 parabricks_version=$parabricks_version
 monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
@@ -1172,7 +1185,7 @@ process cnvkit_compare{
    
     output:
     file "check.completed.txt"
-    val "${tumor_normal_name.tumor}.markdup.cns" into out_cnvkit_compare
+    val "${tumor_normal_name.tumor}.markdup.cns" into out_cnvkit_compare, out_cnvkit_compare2
     when:
     params.cnvkit_compare_enable
 """
@@ -1459,6 +1472,63 @@ sleep_time=$sleep_time
 THREADS=${params.survirus_threads}
 survirus_img=${params.img_dir}/${params.survirus_img}
 source ${job_script}/survirus.sh
+echo -n > check.completed.txt
+"""
+}
+
+process ascatngs{
+
+    input:
+    each tumor_normal_name from tumor_normal_names_hyperclust
+    val dummy from out_cnvkit_compare2.collect()
+    val dummy2 from out_mutect2.collect()
+    output:
+    val(out_val)  into out_ascatngs
+    file "check.completed.txt"
+    when:
+    params.hyperclust_enable
+shell:
+out_val = [tumor_name:"${tumor_normal_name.tumor}", tumor_bam:"${tumor_normal_name.tumor_bam}"]
+"""
+sleep_time=$sleep_time
+tumor_name=$tumor_normal_name.tumor
+normal_name=$tumor_normal_name.normal
+tumor_bam=$tumor_normal_name.tumor_bam
+normal_bam=$tumor_normal_name.normal_bam
+gender=${tumor_normal_name.gender}
+output_dir=$output_dir
+ref_fa=$ref_fa
+ascatngs_option="${params.ascatngs_option}"
+ascatngs_img=${params.img_dir}/${params.ascatngs_img}
+samtools_img=${params.img_dir}/${params.samtools_img}
+source ${job_script}/ascatngs.sh
+echo -n > check.completed.txt
+"""
+}
+
+
+process hyperclust{
+
+    input:
+    each tumor from out_ascatngs.collect()
+
+    output:
+    file "check.completed.txt"
+
+"""
+sleep_time=$sleep_time
+hyperclust_img=${params.img_dir}/${params.hyperclust_img}
+samtools_img=${params.img_dir}/${params.samtools_img}
+id=$tumor.tumor_name
+tumor_bam=$tumor.tumor_bam
+assembly=${params.hyperclust_assembly}
+intraBS=${params.hyperclust_intraBS}
+ws=${params.hyperclust_ws}
+times=${params.hyperclust_times}
+genome=${params.hyperclust_genome}
+available=${params.hyperclust_available}
+output_dir=$output_dir
+source ${job_script}/hyperclust.sh
 echo -n > check.completed.txt
 """
 }
