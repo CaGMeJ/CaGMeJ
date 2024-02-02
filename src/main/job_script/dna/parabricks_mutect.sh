@@ -3,7 +3,7 @@ export PATH=/usr/local/package/python/3.6.5/bin:$PATH
 source /etc/profile.d/modules.sh
 module use $modulefiles
 module load $parabricks_version
-export SINGULARITY_BINDPATH=/cshare1,/home,/share
+export SINGULARITY_BINDPATH=$singularity_bindpath
 
 set -xv
 
@@ -56,11 +56,14 @@ fi
 
 singularity exec $tabix_img bgzip -f ${output_dir}/${sample_name}.mutect.vcf
 singularity exec $tabix_img tabix -f -p vcf ${output_dir}/${sample_name}.mutect.vcf.gz
+md5sum ${output_dir}/${sample_name}.mutect.vcf.gz > ${output_dir}/${sample_name}.mutect.vcf.gz.md5
+md5sum ${output_dir}/${sample_name}.mutect.vcf.gz.tbi > ${output_dir}/${sample_name}.mutect.vcf.gz.tbi.md5
 
-export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx8g -Xms32m" 
+export JAVA_TOOL_OPTIONS="$filtermutectcalls_java_option" 
 singularity exec $gatk_img /gatk-4.1.0.0/gatk FilterMutectCalls \
     -O ${output_dir}/${sample_name}.mutect.filtered.vcf.gz \
     -R  $ref_fa \
     -V ${output_dir}/${sample_name}.mutect.vcf.gz
-
+md5sum ${output_dir}/${sample_name}.mutect.filtered.vcf.gz > ${output_dir}/${sample_name}.mutect.filtered.vcf.gz.md5
+md5sum ${output_dir}/${sample_name}.mutect.filtered.vcf.gz.tbi > ${output_dir}/${sample_name}.mutect.filtered.vcf.gz.tbi.md5
 set +xv

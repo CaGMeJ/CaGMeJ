@@ -2,7 +2,7 @@ sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles
 module load singularity/3.7.0 
-export SINGULARITY_BINDPATH=/cshare1,/home,/share
+export SINGULARITY_BINDPATH=$singularity_bindpath
 set -xv
 set -e
 host=$ref_fa

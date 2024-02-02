@@ -1,7 +1,7 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
 module load singularity/3.7.0
-export SINGULARITY_BINDPATH=/cshare1,/home,/share
+export SINGULARITY_BINDPATH=$singularity_bindpath
 export PYTHONNOUSERSITE=1
 
 function genomon_mut_header () {

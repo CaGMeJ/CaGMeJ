@@ -4,7 +4,7 @@ export PATH=/usr/local/package/python/3.6.5/bin:$PATH
 source /etc/profile.d/modules.sh
 module use $modulefiles
 module load $parabricks_version
-export SINGULARITY_BINDPATH=/cshare1,/home,/share
+export SINGULARITY_BINDPATH=$singularity_bindpath
 
 set -xv
 output_dir=${output_dir}/qc/bammetrics/${sample_name}

@@ -18,6 +18,7 @@ chord_csv = params.output_dir + '/' + params.chord_csv
 fastqc_csv = params.output_dir + '/' + params.fastqc_csv
 survirus_csv = params.output_dir + '/' + params.survirus_csv
 hyperclust_csv = params.output_dir + '/' + params.hyperclust_csv
+battenberg_csv = params.output_dir + '/' + params.battenberg_csv
 
 genomon_conf = params.genomon_conf
 genomon_sample_conf = params.genomon_sample_conf
@@ -194,6 +195,12 @@ Channel
    .into { tumor_normal_names_mutect }
 
 Channel
+   .fromPath(mutation_csv)
+   .splitCsv(header: true, sep: ",")
+   .filter { it.normal != "None" }
+   .into { tumor_normal_names_cgpPindel }
+
+Channel
    .fromPath(deepvariant_csv)
    .splitCsv(header: true, sep: ",")
    .into { sample_names_deepvariant }
@@ -241,6 +248,11 @@ Channel
    .splitCsv(header: true, sep: ",")
    .into { tumor_normal_names_hyperclust }
 
+Channel
+   .fromPath(battenberg_csv)
+   .splitCsv(header: true, sep: ",")
+   .into { tumor_normal_names_battenberg }
+
 process fastqc_check{
 
     input:
@@ -259,6 +271,7 @@ sample_name="$fastq.sample_name"_"$fastq.fastq_number"
 fastqc_option="$fastqc_option"
 sleep_time=$sleep_time
 fastqc_img=$fastqc_img
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/fastqc.sh
 echo -n > check.completed.txt
 """
@@ -277,6 +290,7 @@ output_dir=$output_dir
 per_page=$per_page
 fastqc_script_dir=$fastqc_script_dir
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/fastqc_list.sh
 echo -n > check.completed.txt
 """
@@ -289,7 +303,7 @@ process parabricks_fq2bam{
     input:
     val  fastq from  fastq_files_align
     output:
-    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count, bam_files_survirus, bam_files_cram, bam_files_hyperclust
+    val "${fastq.sample_name}.markdup.bam" into   bam_files_bammetrics, bam_files_mutect, bam_files_deepvariant, bam_files_cnvkit,  bam_files_genomon_pipeline, bam_files_CollectMultipleMetrics, bam_files_manta, bam_files_gridss, bam_files_itd_assembler, bam_files_msisensor, bam_files_bam2seqz,  bam_files_haplotypecaller, bam_files_facets, bam_files_NCM, bam_files_mimcall, bam_files_cnvkit_compare, bam_files_cnvkit_compare_purity, bam_files_genomon_mutation, bam_files_genomon_sv, bam_files_gridss_parallel, bam_files_CollectWgsMetrics, bam_files_virus_count, bam_files_survirus, bam_files_cram, bam_files_hyperclust, bam_files_cgpPindel
     file "check.completed.txt"
     when:
     !params.fastqc_only
@@ -304,6 +318,7 @@ monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
 bwa_options="${bwa_options}"
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/parabricks_fq2bam.sh
 echo -n > check.completed.txt
 """
@@ -328,6 +343,7 @@ ref_fa=$ref_fa
 cram_view_option="${params.cram_view_option}"
 cram_index_option="${params.cram_index_option}"
 samtools_img=${params.img_dir}/${params.samtools_img}
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/cram.sh
 echo -n > check.completed.txt
 """
@@ -352,6 +368,7 @@ output_dir=$output_dir
 ref_fa=$ref_fa
 sleep_time=$sleep_time
 picard_img=${params.img_dir}/${params.picard_img}
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/CollectMultipleMetrics.sh
 echo -n > check.completed.txt
 """
@@ -379,6 +396,7 @@ parabricks_version=$parabricks_version
 monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/parabricks_bammetrics.sh
 echo -n > check.completed.txt
 """
@@ -402,6 +420,7 @@ output_dir=$output_dir
 ref_fa=$ref_fa
 sleep_time=$sleep_time
 gatk_img=${params.img_dir}/${params.gatk_img}
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/CollectWgsMetrics.sh
 echo -n > check.completed.txt
 """
@@ -422,6 +441,7 @@ process multiqc{
 multiqc_img=${params.img_dir}/${params.multiqc_img}
 output_dir=${params.output_dir}
 sleep_time=${params.sleep_time}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/multiqc.sh
 echo -n > check.completed.txt
 """
@@ -433,7 +453,7 @@ process parabricks_mutect{
      val dummy  from params.parabricks_fq2bam_enable ? bam_files_mutect.collect() : Channel.of(1)
 
     output:
-    val "${tumor_normal_name.tumor}"  into out_mutect, out_mutect2
+    val "${tumor_normal_name.tumor}"  into out_mutect, out_mutect2, out_mutect3
     val "${tumor_normal_name.tumor}"  into out_mutect_chord 
     file "check.completed.txt"
     when:
@@ -455,6 +475,8 @@ samtools_img=$samtools_img
 annovar_enable=$annovar_enable
 tabix_img=$tabix_img
 gatk_img=${params.img_dir}/${params.gatk_img}
+filtermutectcalls_java_option="${params.filtermutectcalls_java_option}"
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/parabricks_mutect.sh
 echo -n > check.completed.txt
 """
@@ -480,7 +502,34 @@ tumor_name=$tumor_name
 output_dir=$output_dir
 build_version=$build_version
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/mutect_annovar.sh
+echo -n > check.completed.txt
+"""
+}
+
+process mutect_vep{
+
+    input:
+    each tumor_name from out_mutect3.collect()
+
+    output:
+    val "${tumor_name}"  into out_mutect_vep
+    file "check.completed.txt"
+
+    when:
+    params.vep_enable
+
+"""
+vep_param="${params.vep_param}"
+vep_cache_dir="${params.vep_cache_dir}"
+ref_fa="${params.ref_fa}"
+tumor_name=$tumor_name
+output_dir=$output_dir
+sleep_time=$sleep_time
+vep_img=${params.img_dir}/${params.vep_img}
+singularity_bindpath=${params.singularity_bindpath}
+source ${job_script}/mutect_vep.sh
 echo -n > check.completed.txt
 """
 }
@@ -492,7 +541,7 @@ process parabricks_deepvariant{
     val dummy  from params.parabricks_fq2bam_enable ? bam_files_deepvariant.collect() : Channel.of(1)
 
     output:
-    val "${sample_name.sample_name}"  into out_deepvariant
+    val "${sample_name.sample_name}"  into out_deepvariant, out_deepvariant2
     file "check.completed.txt"
  
     when:
@@ -510,6 +559,7 @@ monitoring_script=$monitoring_script
 sleep_time=$sleep_time
 annovar_enable=$annovar_enable
 tabix_img=$tabix_img
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/parabricks_deepvariant.sh
 echo -n > check.completed.txt
 """
@@ -535,7 +585,35 @@ sample_name=$sample_name
 output_dir=$output_dir
 build_version=$build_version
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/deepvariant_annovar.sh
+echo -n > check.completed.txt
+"""
+}
+
+
+process deepvariant_vep{
+
+    input:
+    each sample_name from out_deepvariant2.collect()
+
+    output:
+    val "${sample_name}"  into out_deepvariant_vep
+    file "check.completed.txt"
+
+    when:
+    params.vep_enable
+
+"""
+vep_param="${params.vep_param}"
+vep_cache_dir="${params.vep_cache_dir}"
+ref_fa="${params.ref_fa}"
+sample_name=$sample_name
+output_dir=$output_dir
+sleep_time=$sleep_time
+vep_img=${params.img_dir}/${params.vep_img}
+singularity_bindpath=${params.singularity_bindpath}
+source ${job_script}/deepvariant_vep.sh
 echo -n > check.completed.txt
 """
 }
@@ -547,7 +625,7 @@ process parabricks_haplotypecaller{
     each sample from sample_names_haplotypecaller
     val dummy from params.parabricks_fq2bam_enable ? bam_files_haplotypecaller.collect() : Channel.of(1)
     output:
-    val "${sample.sample_name}"  into out_haplotypecaller
+    val "${sample.sample_name}"  into out_haplotypecaller, out_haplotypecaller2
     file "check.completed.txt"
     when:
     params.parabricks_haplotypecaller_enable
@@ -566,6 +644,7 @@ monitoring_script=$monitoring_script
 samtools_img=$samtools_img
 tabix_img=$tabix_img
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/parabricks_haplotypecaller.sh
 echo -n > check.completed.txt
 """
@@ -592,10 +671,12 @@ sample_name=$sample_name
 output_dir=$output_dir
 build_version=$build_version
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/haplotype_annovar.sh
 echo -n > check.completed.txt
 """
 }
+
 
 process parabricks_cnvkit{
 
@@ -619,6 +700,7 @@ parabricks_version=$parabricks_version
 monitoring_enable=$monitoring_enable
 monitoring_script=$monitoring_script
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/parabricks_cnvkit.sh
 echo -n > check.completed.txt
 """
@@ -637,6 +719,7 @@ output_dir=$output_dir
 grep_option="$grep_option"
 cnvkit_export_option="$cnvkit_export_option"
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/cnvkit_graphics.sh
 echo -n > check.completed.txt
 """
@@ -658,6 +741,7 @@ ref_fa=$sequenza_ref_fa
 output_dir=$output_dir
 sleep_time=$sleep_time
 sequenza_utils_img=$sequenza_utils_img
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/sequenza_gc_wiggle.sh
 echo -n > check.completed.txt
 """
@@ -694,6 +778,7 @@ sleep_time=$sleep_time
 samtools_img=$samtools_img
 sequenza_utils_img=$sequenza_utils_img
 crossmap_option=$crossmap_option
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/sequenza_crossmap.sh
 echo -n > check.completed.txt
 """
@@ -717,6 +802,7 @@ samtools_cpu=$samtools_cpu
 chr_list="$params.chr_list"
 sleep_time=$sleep_time
 samtools_img=$samtools_img
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/sequenza_crossmap_merge.sh
 echo -n > check.completed.txt
 """
@@ -750,6 +836,7 @@ ref_fa=$sequenza_ref_fa
 chain_file=$chain_file
 sleep_time=$sleep_time
 sequenza_utils_img=$sequenza_utils_img
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/sequenza_bam2seqz.sh
 echo -n > check.completed.txt
 """
@@ -773,6 +860,7 @@ chr_list="$params.chr_list"
 sleep_time=$sleep_time
 sequenza_R_img=$sequenza_R_img
 tabix_img=$tabix_img
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/sequenza_merge.sh
 echo -n > check.completed.txt
 """
@@ -797,6 +885,7 @@ output_dir=$output_dir
 ref_fa=$ref_fa
 baseline_configure=$baseline_configure
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/msisensor-pro.sh > .out.txt
 echo -n > check.completed.txt
 """
@@ -807,9 +896,13 @@ process manta{
     each tumor_normal_name from tumor_normal_names_manta
     val dummy from params.parabricks_fq2bam_enable ? bam_files_manta.collect() : Channel.of(1)
     output:
+    val(out_val) into out_manta
     file "check.completed.txt"
     when:
     params.manta_enable
+
+shell:
+out_val = [tumor_name:"${tumor_normal_name.tumor}", tumor_bam:"${tumor_normal_name.tumor_bam}", normal_name:"${tumor_normal_name.normal}", normal_bam:"${tumor_normal_name.normal_bam}"]
 """
 tumor_name=$tumor_normal_name.tumor
 tumor_bam=$tumor_normal_name.tumor_bam
@@ -821,11 +914,67 @@ ref_fa=$ref_fa
 manta_option="$manta_option"
 manta_img=$manta_img
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/manta.sh
 echo -n > check.completed.txt
 """
 }
 
+process parabricks_strelka{
+
+    input:
+    each tumor_normal_name from out_manta.filter { it.normal_name != "None" }.collect()
+
+    output:
+    val(out_val) into out_strelka
+    file "check.completed.txt"
+    when:
+    params.parabricks_strelka_enable
+
+shell:
+out_val = [tumor_name:"${tumor_normal_name.tumor_name}",  normal_name:"${tumor_normal_name.normal_name}"]
+"""
+modulefiles=$params.modulefiles
+parabricks_version=$parabricks_version
+tumor_name=$tumor_normal_name.tumor_name
+tumor_bam=$tumor_normal_name.tumor_bam
+normal_name=$tumor_normal_name.normal_name
+normal_bam=$tumor_normal_name.normal_bam
+output_dir=$output_dir
+ref_fa=$ref_fa
+parabricks_strelka_option="$params.parabricks_strelka_option"
+sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
+source ${job_script}/parabricks_strelka.sh
+echo -n > check.completed.txt
+"""
+}
+
+process strelka_annovar{
+
+    input:
+    each tumor_normal_name from out_strelka.collect()
+
+    output:
+    file "check.completed.txt"
+    when:
+    params.annovar_enable
+
+"""
+tumor_name=$tumor_normal_name.tumor_name
+normal_name=$tumor_normal_name.normal_name
+output_dir=$output_dir
+sleep_time=$sleep_time
+annovar=$annovar
+annovar_param="$annovar_param"
+humandb="$humandb"
+build_version=$build_version
+python_dir=$python_dir
+singularity_bindpath=${params.singularity_bindpath}
+source ${job_script}/strelka_annovar.sh
+echo -n > check.completed.txt
+"""
+}
 
 process ITD_cluster_bins{
 
@@ -850,6 +999,7 @@ output_dir=$output_dir
 cluster_bins_c=$cluster_bins_c
 cluster_bins_pkmer=$cluster_bins_pkmer
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/ITD_cluster_bins.sh
 echo -n > check.completed.txt
 """
@@ -879,6 +1029,7 @@ iterate_on_bins_cov_cut_min=$iterate_on_bins_cov_cut_min
 iterate_on_bins_cov_cut_max=$iterate_on_bins_cov_cut_max
 phrap=$phrap
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/ITD_iterate_on_bins.sh
 echo -n > check.completed.txt
 """
@@ -902,6 +1053,7 @@ post_processing_max_bin=$post_processing_max_bin
 annotation_bed_file=$annotation_bed_file
 bdir=$bdir
 sleep_time=$sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/ITD_post_processing.sh
 echo -n > check.completed.txt
 """
@@ -929,6 +1081,7 @@ R_script=$params.R_script
 ref_fa=$ref_fa
 ref_type=$params.ref_type
 sleep_time=$params.sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/gridss_former.sh
 echo -n > check.completed.txt
 """
@@ -958,6 +1111,7 @@ ref_type=$params.ref_type
 sleep_time=$params.sleep_time
 gridss_node_index=$gridss_node_index
 gridss_assembly_node=$params.gridss_assembly_node
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/gridss_assembly.sh
 echo -n > check.completed.txt
 """
@@ -985,6 +1139,7 @@ R_script=$params.R_script
 ref_fa=$ref_fa
 ref_type=$params.ref_type
 sleep_time=$params.sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/gridss_latter.sh
 echo -n > check.completed.txt
 """
@@ -1016,6 +1171,7 @@ R_script=$params.R_script
 ref_fa=$ref_fa
 ref_type=$params.ref_type
 sleep_time=$params.sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/gridss.sh
 echo -n > check.completed.txt
 """
@@ -1037,6 +1193,7 @@ project_dir=$output_dir
 genomon_conf=$genomon_conf
 sleep_time=$sleep_time
 output_dir=$output_dir
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/genomon_pipeline.sh
 echo -n > check.completed.txt
 """
@@ -1063,6 +1220,7 @@ ngscheckmate_img=${params.img_dir}/${params.ngscheckmate_img}
 sample_name=$sample_name.sample_name
 bam_file=$sample_name.bam_file
 output_dir=${params.output_dir}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/NCM_pileup.sh
 echo -n > check.completed.txt
 """
@@ -1082,6 +1240,7 @@ NCM_mpileup_option="${params.NCM_mpileup_option}"
 NCM_bed="${params.NCM_bed}"
 ngscheckmate_img=${params.img_dir}/${params.ngscheckmate_img}
 output_dir=${params.output_dir}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/NCM_run.sh
 echo -n > check.completed.txt
 """
@@ -1108,6 +1267,7 @@ facets_pileup_vcf=${params.facets_pileup_vcf}
 facets_img=${params.img_dir}/${params.facets_img}
 output_dir=${params.output_dir}
 snp_pileup_option="${params.snp_pileup_option}"
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/facets_pileup.sh 
 echo -n > check.completed.txt
 """
@@ -1122,7 +1282,10 @@ process facets_R{
    output:
    file "check.completed.txt"
    path "${tumor_normal_name.tumor}" into out_facets_R
-   
+   val(out_val) into out_facets_R2
+
+shell:
+out_val = [tumor_name:"${tumor_normal_name.tumor}", tumor_bam:"${tumor_normal_name.tumor_bam}"]
 """
 sleep_time=${params.sleep_time}
 facets_img=${params.img_dir}/${params.facets_img}
@@ -1130,6 +1293,7 @@ output_dir=${params.output_dir}
 tumor_name=${tumor_normal_name.tumor}
 R_script=${params.R_script}
 facets_chr_list="${params.facets_chr_list}"
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/facets_R.sh
 echo -n > check.completed.txt
 """
@@ -1158,6 +1322,7 @@ mimcall_db=${params.mimcall_db}
 GPOS2RPOS_READ_F_option="${params.GPOS2RPOS_READ_F_option}"
 GPOS2RPOS_BLOOD_READ_F_option="${params.GPOS2RPOS_BLOOD_READ_F_option}"
 MIM_CALLER_option="${params.MIM_CALLER_option}"
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/mimcall.sh 
 echo -n > check.completed.txt
 """
@@ -1173,6 +1338,7 @@ process mimcall_result{
 sleep_time=${params.sleep_time}
 mimcall_csv=${mimcall_csv}
 output_dir=${params.output_dir}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/mimcall_result.sh
 echo -n > check.completed.txt
 """
@@ -1185,7 +1351,7 @@ process cnvkit_compare{
    
     output:
     file "check.completed.txt"
-    val "${tumor_normal_name.tumor}.markdup.cns" into out_cnvkit_compare, out_cnvkit_compare2
+    val "${tumor_normal_name.tumor}.markdup.cns" into out_cnvkit_compare, out_cnvkit_compare2, out_cnvkit_compare3
     when:
     params.cnvkit_compare_enable
 """
@@ -1201,6 +1367,7 @@ cnvkit_compare_option="${params.cnvkit_compare_option}"
 cnvkit_export_option="${params.cnvkit_export_option}"
 grep_option="${params.grep_option}"
 output_dir=${params.output_dir}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/cnvkit_compare.sh 
 echo -n > check.completed.txt
 """
@@ -1226,6 +1393,7 @@ cnvkit_img=${params.img_dir}/${params.cnvkit_img}
 cnvkit_export_option="${params.cnvkit_export_option}"
 grep_option="${params.grep_option}"
 output_dir=${params.output_dir}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/cnvkit_compare_purity.sh 
 echo -n > check.completed.txt
 """
@@ -1251,6 +1419,7 @@ chord_chr_list="${params.chord_chr_list}"
 tabix_img=${tabix_img}
 output_dir=${params.output_dir}
 R_script=${params.R_script}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/chord.sh 
 echo -n > check.completed.txt
 """
@@ -1268,6 +1437,7 @@ sleep_time=${params.sleep_time}
 output_dir=${params.output_dir}
 python_dir=${params.python_dir}
 chord_csv=${chord_csv}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/chord_summary.sh 
 echo -n > check.completed.txt
 """
@@ -1309,6 +1479,7 @@ mutfilter_breakpoint_params='${params.mutfilter_breakpoint_params}'
 REGION=${interval}
 ref_fa=${ref_fa}
 output_dir=${params.output_dir}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/genomon_mutation_call.sh
 echo -n > check.completed.txt
 """
@@ -1341,6 +1512,7 @@ build_version=${params.build_version}
 humandb=${params.humandb}
 annovar_enable=${params.annovar_enable}
 annovar_param='${params.annovar_param}'
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/genomon_mutation_merge.sh
 echo -n > check.completed.txt
 """
@@ -1372,6 +1544,7 @@ genomon_img=${params.img_dir}/${params.genomon_img}
 genomon_sv_parse_param='${params.genomon_sv_parse_param}'
 genomon_sv_filt_param='${params.genomon_sv_filt_param}'
 sv_utils_param='${params.sv_utils_param}'
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/genomon_sv.sh
 echo -n > check.completed.txt
 """
@@ -1420,6 +1593,7 @@ paplot_enable=${params.paplot_enable}
 paplot_conf=${params.paplot_conf}
 python_dir=${params.python_dir}
 job_script=${params.job_script}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/post_analysis_and_pmsignature.sh
 echo -n > check.completed.txt
 """
@@ -1444,6 +1618,7 @@ bowtie_ref=$params.bowtie_ref
 sleep_time=$sleep_time
 python_dir=${params.python_dir}
 virus_count_img=${params.img_dir}/${params.virus_count_img}
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/virus_count.sh
 echo -n > check.completed.txt
 """
@@ -1471,6 +1646,7 @@ output_dir=$output_dir
 sleep_time=$sleep_time
 THREADS=${params.survirus_threads}
 survirus_img=${params.img_dir}/${params.survirus_img}
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/survirus.sh
 echo -n > check.completed.txt
 """
@@ -1483,7 +1659,7 @@ process ascatngs{
     val dummy from out_cnvkit_compare2.collect()
     val dummy2 from out_mutect2.collect()
     output:
-    val(out_val)  into out_ascatngs
+    val(out_val)  into out_ascatngs,  out_ascatngs2
     file "check.completed.txt"
     when:
     params.hyperclust_enable
@@ -1501,6 +1677,7 @@ ref_fa=$ref_fa
 ascatngs_option="${params.ascatngs_option}"
 ascatngs_img=${params.img_dir}/${params.ascatngs_img}
 samtools_img=${params.img_dir}/${params.samtools_img}
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/ascatngs.sh
 echo -n > check.completed.txt
 """
@@ -1528,7 +1705,92 @@ times=${params.hyperclust_times}
 genome=${params.hyperclust_genome}
 available=${params.hyperclust_available}
 output_dir=$output_dir
+singularity_bindpath=${params.singularity_bindpath}
 source ${job_script}/hyperclust.sh
+echo -n > check.completed.txt
+"""
+}
+
+process cgpPindel{
+
+    input:
+    each tumor_normal_name from tumor_normal_names_cgpPindel
+     val dummy  from params.parabricks_fq2bam_enable ? bam_files_cgpPindel.collect() : Channel.of(1)
+
+    output:
+    file "check.completed.txt"
+    when:
+    params.cgpPindel_enable
+
+"""
+tumor_name=$tumor_normal_name.tumor
+normal_name=$tumor_normal_name.normal
+tumor_bam=$tumor_normal_name.tumor_bam
+normal_bam=$tumor_normal_name.normal_bam
+output_dir=$output_dir
+ref_fa=$ref_fa
+sleep_time=$sleep_time
+cgpPindel_img="${params.img_dir}/${params.cgpPindel_img}"
+pindel_option="${params.pindel_option}"
+FlagVcf_option="${params.FlagVcf_option}"
+singularity_bindpath=${params.singularity_bindpath}
+source ${job_script}/cgpPindel.sh
+echo -n > check.completed.txt
+"""
+}
+
+process scarhrd{
+
+    input:
+    each tumor from out_ascatngs2.collect().flatten().mix( out_facets_R2.collect().flatten() ).unique().unique()
+
+    output:
+    file "check.completed.txt"
+
+    when:
+    params.scarhrd_enable
+
+"""
+sleep_time=$sleep_time
+scarhrd_img=${params.img_dir}/${params.scarhrd_img}
+samtools_img=${params.img_dir}/${params.samtools_img}
+tumor_name=$tumor.tumor_name
+tumor_bam=$tumor.tumor_bam
+output_dir=$output_dir
+singularity_bindpath=${params.singularity_bindpath}
+source ${job_script}/scarHRD.sh
+echo -n > check.completed.txt
+"""
+}
+
+process battenberg{
+
+    input:
+    each tumor_normal_name from tumor_normal_names_battenberg
+    val dummy from out_cnvkit_compare3.collect()
+
+    output:
+    file "check.completed.txt"
+    when:
+    params.battenberg_enable
+
+"""
+sleep_time=$sleep_time
+TUMOURNAME=$tumor_normal_name.tumor
+NORMALNAME=$tumor_normal_name.normal
+NORMALBAM=$tumor_normal_name.normal_bam
+TUMOURBAM=$tumor_normal_name.tumor_bam
+NTHREADS=${params.battenberg_nthreads}
+BEAGLE_BASEDIR=${params.beagle_basedir}
+CHROM_COORD_FILE=${params.chrom_coord_file}
+beaglemaxmem=${params.beaglemaxmem}
+beaglecpu=${params.beaglecpu} 
+IS_MALE=${tumor_normal_name.is_male}
+output_dir=$output_dir
+battenberg_img=${params.img_dir}/${params.battenberg_img}
+R_SCRIPT=${params.R_script}
+singularity_bindpath=${params.singularity_bindpath}
+source ${job_script}/battenberg.sh
 echo -n > check.completed.txt
 """
 }

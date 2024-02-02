@@ -32,7 +32,7 @@ with open(in_mutation_file) as lines:
         tmp = End
 
 for Chr, Start, End, mutation in interval_list:
-    interval = Chr + ":" + str(int(Start) - window + 1) +"-"+ str(int(End) + window)
+    interval = Chr + ":" + str(max(0, int(Start) - window + 1)) +"-"+ str(int(End) + window)
     target = ""
     for item in pysam.faidx(reference_genome, interval).split("\n")[1:-1]:
         target += item

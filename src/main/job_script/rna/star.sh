@@ -3,7 +3,7 @@ export PATH=/usr/local/package/python/3.6.5/bin:$PATH
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
 module load singularity/3.7.0
-export SINGULARITY_BINDPATH=/cshare1,/home,/share
+export SINGULARITY_BINDPATH=$singularity_bindpath
 export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx16g -Xms32m -XX:ConcGCThreads=8"
 
 export SINGULARITY_BINDPATH=$SINGULARITY_BINDPATH,/home,/share

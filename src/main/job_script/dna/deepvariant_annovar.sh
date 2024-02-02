@@ -20,4 +20,5 @@ fi
 if [ $vcf != $anno_vcf ]; then
     exit 1
 fi
+md5sum ${vcf_file}.hg38_multianno.vcf > ${vcf_file}.hg38_multianno.vcf.md5
 set +xv
