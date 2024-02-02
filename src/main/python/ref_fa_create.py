@@ -42,6 +42,7 @@ with open(nf_cfg) as f:
     paplot_enable = True if t["params"]["paplot_enable"] == "true" else False
     survirus_enable = True if t["params"]["survirus_enable"] == "true" else False
     hyperclust_enable = True if t["params"]["hyperclust_enable"] == "true" else False
+    battenberg_enable = True if t["params"]["battenberg_enable"] == "true" else False
 
 #####################
 #
@@ -80,6 +81,7 @@ sc.compare_conf_csv(output_dir, "mimcall", mimcall_enable)
 sc.single_conf_csv(output_dir, "chord", chord_enable, "dna")
 sc.single_conf_csv(output_dir, "survirus", survirus_enable, "dna")
 sc.compare_conf_plus_csv(output_dir, "hyperclust", "gender", hyperclust_enable)
+sc.compare_conf_plus_csv(output_dir, "battenberg", "is_male", battenberg_enable)
 
 parabricks_fq2bam_enable = "true" if len(sc.fastq_list) else "false"
 

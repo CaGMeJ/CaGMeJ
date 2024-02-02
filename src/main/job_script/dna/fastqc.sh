@@ -9,7 +9,7 @@ fi
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
 module load singularity/3.7.0
-export SINGULARITY_BINDPATH=/cshare1,/home,/share
+export SINGULARITY_BINDPATH=$singularity_bindpath
 set -xv
 singularity exec $fastqc_img fastqc $fastqc_option -o $output_dir $fastq
 set +xv

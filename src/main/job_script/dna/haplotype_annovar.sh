@@ -31,5 +31,6 @@ for interval in "${!option_list[@]}"; do
         rm ${vcf_file}.refGene.invalid_input
         rm ${vcf_file}.invalid_input 
     fi
+    md5sum ${vcf_file}.hg38_multianno.vcf > ${vcf_file}.hg38_multianno.vcf.md5 
 done
 set +xv

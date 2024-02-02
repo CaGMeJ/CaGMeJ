@@ -3,7 +3,7 @@ export PATH=/usr/local/package/python/3.6.5/bin:$PATH
 source /etc/profile.d/modules.sh
 module use $modulefiles
 module load $parabricks_version
-export SINGULARITY_BINDPATH=/cshare1,/home,/share
+export SINGULARITY_BINDPATH=$singularity_bindpath
 set -xv
 
 haplotype_dir=${output_dir}/haplotype/${sample_name}
@@ -39,4 +39,6 @@ for interval in "${!option_list[@]}"; do
     fi
     singularity exec $tabix_img bgzip -f $vcf_file
     singularity exec $tabix_img tabix -f -p vcf ${vcf_file}.gz
+    md5sum  ${vcf_file}.gz >  ${vcf_file}.gz.md5
+    md5sum  ${vcf_file}.gz.tbi >  ${vcf_file}.gz.tbi.md5
 done

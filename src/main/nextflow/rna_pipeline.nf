@@ -66,6 +66,7 @@ sample_name="$fastq.sample_name"_"$fastq.fastq_number"
 fastqc_option="$params.fastqc_option"
 sleep_time=$params.sleep_time
 fastqc_img=${params.img_dir}/$params.fastqc_img
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/fastqc.sh
 echo -n > check.completed.txt
 """
@@ -84,6 +85,7 @@ output_dir=$params.output_dir
 per_page=$params.per_page
 fastqc_script_dir=$params.fastqc_script_dir
 sleep_time=$params.sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/fastqc_list.sh
 echo -n > check.completed.txt
 """
@@ -106,7 +108,8 @@ process star{
     genome_lib_dir=${params.genome_lib_dir} 
     star_option="$params.star_option"
     picard_img=${params.img_dir}/${params.picard_img}
-    source ${params.job_script}/star.sh
+    singularity_bindpath=${params.singularity_bindpath}
+source ${params.job_script}/star.sh
     echo -n > check.completed.txt
     """
 }
@@ -133,6 +136,7 @@ ngscheckmate_img=${params.img_dir}/${params.ngscheckmate_img}
 sample_name=$sample_name.sample_name
 bam_file=$sample_name.bam_file
 output_dir=${params.output_dir}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/NCM_pileup.sh
 echo -n > check.completed.txt
 """
@@ -152,6 +156,7 @@ NCM_mpileup_option="${params.NCM_mpileup_option}"
 NCM_bed="${params.NCM_bed}"
 ngscheckmate_img=${params.img_dir}/${params.ngscheckmate_img}
 output_dir=${params.output_dir}
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/NCM_run.sh
 echo -n > check.completed.txt
 """
@@ -174,7 +179,8 @@ process star_fusion{
     genome_lib_dir=${params.genome_lib_dir}
     STAR_img=${params.img_dir}/${params.STAR_img}
     sleep_time=$params.sleep_time
-    source ${params.job_script}/star_fusion.sh
+    singularity_bindpath=${params.singularity_bindpath}
+source ${params.job_script}/star_fusion.sh
     echo -n > check.completed.txt
     """
 }
@@ -198,6 +204,7 @@ output_dir=$params.output_dir
 gtf_file=$params.gtf_file
 sleep_time=$params.sleep_time
 bam_file=$sample_name.bam_file
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/htseq.sh
 echo -n > check.completed.txt
 """
@@ -222,6 +229,7 @@ geneset=${params.geneset}
 pseudo_count=${params.pseudo_count}
 R_SCRIPT=${params.R_SCRIPT}
 sleep_time=$params.sleep_time
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/deseq2.sh
 echo -n > check.completed.txt
 """
@@ -251,6 +259,7 @@ refExon_bed=$params.fusion_refExon_bed
 ensExon_bed=$params.fusion_ensExon_bed
 fusionfusion_option="${params.fusionfusion_option}"
 fusion_utils_filt_option="${params.fusion_utils_filt_option}"
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/genomon_fusion.sh
 echo -n > check.completed.txt
 """
@@ -274,6 +283,7 @@ sleep_time=$params.sleep_time
 output_dir=$params.output_dir
 refExon_ex_bed=$params.expression_refExon_ex_bed
 genomon_expression_option="${params.genomon_expression_option}"
+singularity_bindpath=${params.singularity_bindpath}
 source ${params.job_script}/genomon_expression.sh
 echo -n > check.completed.txt
 """
