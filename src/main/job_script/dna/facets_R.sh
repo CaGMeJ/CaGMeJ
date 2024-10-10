@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 
 set -xv
 set -e
@@ -16,7 +17,7 @@ done
 gzip -f $output_dir/${tumor_name}.csv
 
 export R_LIBS_USER='-'
-singularity exec  $facets_img R --vanilla --args $output_dir/${tumor_name}.csv.gz  $output_dir/${tumor_name}.out < $R_script/facets/facets0.6.2.R
+$container_bin exec  $facets_img R --vanilla --args $output_dir/${tumor_name}.csv.gz  $output_dir/${tumor_name}.out < $R_script/facets/facets0.6.2.R
 
 if [ ! -s ${output_dir}/${tumor_name}.out.fit.tsv ]; then
     exit 1

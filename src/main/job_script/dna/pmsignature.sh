@@ -1,6 +1,6 @@
 inputfile=${pmsignature_output_dir}/mutation.cut.txt
 set +e
-singularity exec $genomon_r_img bash -c "R --vanilla --slave --args ${inputfile}\
+$container_bin exec $genomon_r_img bash -c "R --vanilla --slave --args ${inputfile}\
           ${pmsignature_output_dir}/${pmsignature_type}.${sig_num}.Rdata \
           $sig_num \
           ${trdirflag} \
@@ -23,7 +23,7 @@ if [ $? -ne 0 ]; then
         continue
 fi
 
-singularity exec $genomon_r_img bash -c "R --vanilla --slave --args\
+$container_bin exec $genomon_r_img bash -c "R --vanilla --slave --args\
           ${pmsignature_output_dir}/${pmsignature_type}.${sig_num}.Rdata \
           ${pmsignature_output_dir}/pmsignature.${pmsignature_type}.result.${sig_num}.json \
           < /genomon_Rscripts-0.1.3/pmsignature/convert_toJson_${pmsignature_type}.R"

@@ -38,7 +38,7 @@ with open(nf_cfg1) as f:
     facets_chr_list = t["params"]["facets_chr_list"]
     genomon_mutation_enable = t["params"]["genomon_mutation_enable"]
     interval_list = t["params"]["interval_list"][1:-1]
-    cram_enable = t["params"]["cram_enable"]
+    cram_enable = t["params"]["bam2cram_enable"]
 
 with open(nf_cfg2) as f:
     S = f.read()

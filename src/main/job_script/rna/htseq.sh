@@ -1,8 +1,9 @@
 sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$SINGULARITY_BINDPATH,/home,/share
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 set -xv
 
 expression_dir=${output_dir}/expression
@@ -14,10 +15,11 @@ if [ ! -e ${output_dir} ]; then
  mkdir -p  ${output_dir}
 fi
 
-singularity exec $deseq2_img htseq-count -f bam \
+$container_bin exec $deseq2_img htseq-count -f bam \
             -i gene_name \
             -r pos \
             $bam_file ${gtf_file} \
+	    $htseq_option \
             > ${output_dir}/${sample_name}.count.txt || exit $?
 
 set +xv 

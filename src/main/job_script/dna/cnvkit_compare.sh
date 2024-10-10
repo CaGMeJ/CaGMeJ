@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 
 set -xv
 set -e
@@ -14,7 +15,7 @@ cd ${output_dir}
 
 male_reference="--male-reference $male_reference_flag"
 
-singularity exec $cnvkit_img cnvkit.py \
+$container_bin exec $cnvkit_img cnvkit.py \
             batch \
             $tumor_bam \
             --normal ${normal_bam} \
@@ -48,13 +49,13 @@ if [ `cat ${pre_T}.cnr | wc -l` -gt 1 ]; then
         exit 1
     fi
 
-    head -n 1  ${output_dir}/${tumor_name}.markdup.cnr > ${output_dir}/${tumor_name}.cnr
-    head -n 1  ${output_dir}/${tumor_name}.markdup.cns > ${output_dir}/${tumor_name}.cns
+    head -n 1  ${pre_T}.cnr > ${output_dir}/${tumor_name}.cnr
+    head -n 1  ${pre_T}.cns > ${output_dir}/${tumor_name}.cns
 
-    grep $grep_option   ${output_dir}/${tumor_name}.markdup.cnr >>  ${output_dir}/${tumor_name}.cnr
-    grep $grep_option  ${output_dir}/${tumor_name}.markdup.cns >> ${output_dir}/${tumor_name}.cns
+    grep $grep_option   ${pre_T}.cnr >>  ${output_dir}/${tumor_name}.cnr
+    grep $grep_option  ${pre_T}.cns >> ${output_dir}/${tumor_name}.cns
 
-    singularity exec $cnvkit_img cnvkit.py scatter  -s ${output_dir}/${tumor_name}.cn{s,r} -o ${output_dir}/${tumor_name}-scatter.png
+    $container_bin exec $cnvkit_img cnvkit.py scatter  -s ${output_dir}/${tumor_name}.cn{s,r} -o ${output_dir}/${tumor_name}-scatter.png
 
     sex_reference=
     if [ "$male_reference_flag" = N ]; then
@@ -65,9 +66,9 @@ if [ `cat ${pre_T}.cnr | wc -l` -gt 1 ]; then
     if [ "$male_reference_flag" = T ]; then
         sex_reference="--male-reference"
     fi
-    singularity exec $cnvkit_img cnvkit.py diagram $sex_reference -s ${output_dir}/${tumor_name}.cn{s,r} -o ${output_dir}/${tumor_name}-diagram.pdf  
+    $container_bin exec $cnvkit_img cnvkit.py diagram $sex_reference -s ${output_dir}/${tumor_name}.cn{s,r} -o ${output_dir}/${tumor_name}-diagram.pdf  
 
-    singularity exec $cnvkit_img cnvkit.py export vcf $sex_reference ${output_dir}/${tumor_name}.markdup.cns ${cnvkit_export_option}  -o ${output_dir}/${tumor_name}.markdup.cns.vcf
+    $container_bin exec $cnvkit_img cnvkit.py export vcf $sex_reference ${output_dir}/${tumor_name}.markdup.cns ${cnvkit_export_option}  -o ${output_dir}/${tumor_name}.markdup.cns.vcf
 
     rm ${output_dir}/${tumor_name}.cns
     rm ${output_dir}/${tumor_name}.cnr

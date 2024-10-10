@@ -18,4 +18,4 @@ fi
 output_dir=$(cd ${output_dir}; pwd)
 
 
-qsub -o $output_dir/log -e $output_dir/log $qsub_option $script_dir/qsub_CaGMeJ.sh  $analysis_type  $sample_conf  $output_dir  $nextflow_conf $flag_del_tmp_dir  $flag_visual $genomon_conf "$heap_size"
+qsub -o $output_dir/log -e $output_dir/log $qsub_option $script_dir/qsub_CaGMeJ.sh  $analysis_type  $sample_conf  $output_dir  $nextflow_conf $flag_del_tmp_dir  $flag_visual $genomon_conf $java "$heap_size"

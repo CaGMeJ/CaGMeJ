@@ -1,8 +1,9 @@
 sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$SINGULARITY_BINDPATH,/home,/share
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export OMP_NUM_THREADS=1
 export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx10g -Xms32m"
 set -xv
@@ -25,7 +26,7 @@ fi
 
 RUN_DIR=${out_dir}
 
-singularity exec $battenberg_img bash -c "R -q --vanilla --args \
+$container_bin exec $battenberg_img bash -c "R -q --vanilla --args \
         $TUMOURNAME \
         $NORMALNAME \
         $NORMALBAM \

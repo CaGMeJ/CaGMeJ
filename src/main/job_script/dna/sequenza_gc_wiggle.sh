@@ -1,8 +1,9 @@
 sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 
 set -xv
 file_name=`basename $ref_fa`
@@ -16,6 +17,6 @@ fi
 
 cp $ref_fa ${output_dir}
 
-singularity exec $sequenza_utils_img sequenza-utils  gc_wiggle -w ${window_size} -f  ${output_dir}/${file_name} -o  ${output_dir}/${gc_file}
+$container_bin exec $sequenza_utils_img sequenza-utils  gc_wiggle -w ${window_size} -f  ${output_dir}/${file_name} -o  ${output_dir}/${gc_file}
 
 

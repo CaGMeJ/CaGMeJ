@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xms32m"
 export R_LIBS_USER='-'
 workdir=`pwd`
@@ -20,7 +21,7 @@ fi
 
 vcf_list=${tumor_name}.gridss.vcf
 cmd="
-singularity exec $gridss_img gridss \
+$container_bin exec $gridss_img gridss \
        $gridss_option \
        --reference $ref_fa \
        --output $output_dir/gridss/$tumor_name/${tumor_name}.gridss.vcf \
@@ -37,7 +38,7 @@ if $flag ;then
     else
         pondir_option="--pondir  $pondir"
     fi
-    singularity exec -B /run  $gridss_img Rscript /opt/gridss/gridss_somatic_filter \
+    $container_bin exec -B /run  $gridss_img Rscript /opt/gridss/gridss_somatic_filter \
        --input $output_dir/gridss/$tumor_name/${tumor_name}.gridss.vcf \
        --output ${tumor_name}.high_confidence_somatic.gridss.vcf \
        $pondir_option \
@@ -56,7 +57,7 @@ do
     if [ $? -gt 0 ]; then
         exit 1
     fi
-    singularity exec  $gridss_img  R --vanilla --args  $output_dir/gridss/$tumor_name/$vcf \
+    $container_bin exec  $gridss_img  R --vanilla --args  $output_dir/gridss/$tumor_name/$vcf \
                     $ref_type \
                     $output_dir/gridss/$tumor_name/${prefix}.gridss.annotated.vcf \
                     $output_dir/gridss/$tumor_name/${prefix}.gridss.simple.bed \

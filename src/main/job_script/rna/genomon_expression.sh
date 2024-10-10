@@ -1,8 +1,9 @@
 
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export PYTHONNOUSERSITE=1
 set -xv
 
@@ -10,7 +11,7 @@ if [ ! -e  ${output_dir}/genomon_expression ]; then
     mkdir -p    ${output_dir}/genomon_expression
 fi
 
-singularity exec $genomon_rna_img genomon_expression \
+$container_bin exec $genomon_rna_img genomon_expression \
      $genomon_expression_option \
      --refExon_bed $refExon_ex_bed \
      $bam_file  \

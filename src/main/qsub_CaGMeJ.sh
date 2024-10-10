@@ -18,7 +18,8 @@ nextflow_parabricks_conf=$4
 flag_del_tmp_dir=$5
 flag_visual=$6
 genomon_conf=$7
-heap_size="$8"
+java=$8
+heap_size="$9"
 
 python_dir=$pipeline_dir/python
 nextflow_dir=$pipeline_dir/nextflow
@@ -37,7 +38,7 @@ if [ $target_pipeline = "dna" ]; then
     set +xv
     eval "$(${conda_dir}/bin/conda shell.bash hook)"
     conda activate CaGMeJ
-    module load java/8
+    module load $java
     set -xv
 
     job_script=$pipeline_dir/job_script/dna
@@ -61,6 +62,7 @@ if [ $target_pipeline = "dna" ]; then
                      --monitoring_script $monitoring_script
                      --fastqc_script_dir $fastqc_script_dir
                      --R_script $R_script
+                     --shellscript $shellscript_dir
                      --phrap $phrap
                      -with-report report.html -with-trace -resume"
 
@@ -75,7 +77,7 @@ if [ $target_pipeline = "rna" ]; then
     set +xv
     eval "$(${conda_dir}/bin/conda shell.bash hook)"
     conda activate CaGMeJ
-    module load java/8
+    module load $java
     set -xv
 
     job_script=$pipeline_dir/job_script/rna

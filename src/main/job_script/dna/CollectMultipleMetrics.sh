@@ -1,8 +1,9 @@
 sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0 
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file 
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx5g -Xms32m" 
 set -xv
 set -e
@@ -10,7 +11,7 @@ if [ ! -e $output_dir/qc/CollectMultipleMetrics/$sample_name ]; then
     mkdir -p  $output_dir/qc/CollectMultipleMetrics/$sample_name
 fi
 
-singularity exec $picard_img java -jar /picard.jar CollectMultipleMetrics \
+$container_bin exec $picard_img java -jar /picard.jar CollectMultipleMetrics \
       I=$bam_file \
       O=$output_dir/qc/CollectMultipleMetrics/$sample_name/${sample_name}.multiple_metrics \
       R=$ref_fa

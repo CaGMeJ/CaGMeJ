@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 
 set -xv
 output_dir=${output_dir}/facets
@@ -17,7 +18,7 @@ do
 done
 set -e
 
-singularity exec $facets_img /snp-pileup_region $facets_pileup_vcf $snp_pileup_option $output_dir/$tumor_name/${tumor_name}.${chr}.csv  $chr $normal_bam $tumor_bam
+$container_bin exec $facets_img /snp-pileup_region $facets_pileup_vcf $snp_pileup_option $output_dir/$tumor_name/${tumor_name}.${chr}.csv  $chr $normal_bam $tumor_bam
 
 for csv_file in `ls $output_dir/$tumor_name/${tumor_name}.${chr}.csv*`
 do

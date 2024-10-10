@@ -13,6 +13,8 @@ with open(nf_cfg) as f:
     S = f.read()
     p = Parser(S)    
     t,i = p.scan(-1, None)
+    container_bin = t["params"]["container_bin"][1:-1]
+    container_module_file = t["params"]["container_module_file"][1:-1]
     ref_fa = t["params"]["ref_fa"][1:-1]
     ref_fa_create_enable = t["params"]["ref_fa_copy_enable"]
     fastqc_enable = True if t["params"]["fastqc_enable"] == "true" else False
@@ -23,6 +25,7 @@ with open(nf_cfg) as f:
     parabricks_haplotypecaller_enable = True if t["params"]["parabricks_haplotypecaller_enable"] == "true" else False
     parabricks_deepvariant_enable = True if t["params"]["parabricks_deepvariant_enable"] == "true" else False
     parabricks_cnvkit_enable = True if t["params"]["parabricks_cnvkit_enable"] == "true" else False
+    parabricks_strelka_enable = True if t["params"]["parabricks_strelka_enable"] == "true" else False
     cnvkit_compare_enable = True if t["params"]["cnvkit_compare_enable"] == "true" else False
     manta_enable = True if t["params"]["manta_enable"] == "true" else False
     gridss_enable = True if t["params"]["gridss_enable"] == "true" else False
@@ -41,8 +44,10 @@ with open(nf_cfg) as f:
     pmsignature_ind_enable = True if t["params"]["pmsignature_ind_enable"] == "true" else False
     paplot_enable = True if t["params"]["paplot_enable"] == "true" else False
     survirus_enable = True if t["params"]["survirus_enable"] == "true" else False
-    hyperclust_enable = True if t["params"]["hyperclust_enable"] == "true" else False
+    ascatngs_enable = True if t["params"]["ascatngs_enable"] == "true" else False
     battenberg_enable = True if t["params"]["battenberg_enable"] == "true" else False
+    cram2bam_enable = True if t["params"]["cram2bam_enable"] == "true" else False
+    strelka_enable = True if t["params"]["strelka_enable"] == "true" else False
 
 #####################
 #
@@ -52,20 +57,32 @@ with open(nf_cfg) as f:
 sc = sample_csv()
 sc.read(sample_conf)
 fastq_list = sc.fastq_list
+cram_list = sc.cram_list
 
 bam_dir = output_dir + "/bam"
 
 markdup_files = list(map(lambda sample_name: bam_dir + "/" + sample_name + "/" + sample_name + ".markdup.bam", fastq_list.keys()))
+markdup_decoded_files = list(map(lambda sample_name: bam_dir + "/" + sample_name + "/" + sample_name + ".markdup.decoded.bam", cram_list.keys()))
+
+assert container_bin.replace(" ", "") in ["singularity", "apptainer"] , "container_bin is set to '" +container_bin+ "'. other than singularity or apptainer is not supported !"
+assert container_module_file.split("/")[0].replace(" ", "") in ["singularity", "apptainer"] , "container_module_file is set to '" +container_module_file+ "'. other than singularity or apptainer is not supported !"
 
 if fastqc_enable:
-    assert len(fastq_list), "fastq is not defined in csv file"
+    assert len(fastq_list), "fastqc_enable is set to true, but fastq is not defined in csv file"
 if CollectMultipleMetrics_enable | parabricks_bammetrics_enable:
-    assert len(fastq_list) + len(sc.bam_list), "set fastq or bam_import in csv file" 
+    assert len(fastq_list) + len(sc.bam_list) + len(sc.cram_list), "set fastq, bam_import or cram_import in csv file" 
+
 assert not (CollectWgsMetrics_enable and parabricks_bammetrics_enable), "Can not select both CollectWgsMetrics_enable and parabricks_bammetrics_enable"
+assert not (strelka_enable and parabricks_strelka_enable), "Can not select both strelka_enable and parabricks_strelka_enable"
    
 sample_conf_name = os.path.splitext(os.path.basename(sample_conf))[0]
 bamimport_csv = sc.bamimport_csv(output_dir, sample_conf_name, markdup_files)
 sc.bam_csv(output_dir, markdup_files)
+if cram2bam_enable:
+    sc.cram_csv(output_dir, markdup_decoded_files)
+    sc.bam_csv(output_dir, markdup_decoded_files)
+else:
+    sc.bam_csv(output_dir, markdup_files)
 sc.sample_conf_csv(output_dir)
 sc.fastqc_conf_csv(output_dir)
 sc.compare_conf_plus_csv(output_dir, "mutation_call", "control_panel", genomon_mutation_enable | parabricks_cnvkit_enable | parabricks_mutect_enable | sequenza_bam2seqz_enable)
@@ -80,7 +97,7 @@ sc.compare_conf_csv(output_dir, "gridss", gridss_enable)
 sc.compare_conf_csv(output_dir, "mimcall", mimcall_enable)
 sc.single_conf_csv(output_dir, "chord", chord_enable, "dna")
 sc.single_conf_csv(output_dir, "survirus", survirus_enable, "dna")
-sc.compare_conf_plus_csv(output_dir, "hyperclust", "gender", hyperclust_enable)
+sc.compare_conf_plus_csv(output_dir, "ascatngs", "gender", ascatngs_enable)
 sc.compare_conf_plus_csv(output_dir, "battenberg", "is_male", battenberg_enable)
 
 parabricks_fq2bam_enable = "true" if len(sc.fastq_list) else "false"

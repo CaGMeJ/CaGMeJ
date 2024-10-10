@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export PYTHONNOUSERSITE=1
 
 function genomon_mut_header () {
@@ -98,7 +99,7 @@ else
     mutil_filter_option="$mutil_filter_option ${mutil_pair_params}" 
 fi
 
-singularity exec $genomon_img mutil filter $mutil_filter_option || exit $?
+$container_bin exec $genomon_img mutil filter $mutil_filter_option || exit $?
 
 rm ${output_dir}/mutation/${tumor_name}/${tumor_name}.simplerepeat_mutations.txt || exit $?
 rm ${output_dir}/mutation/${tumor_name}/${tumor_name}_mutations_candidate.${build_version}_multianno.txt || exit $?
