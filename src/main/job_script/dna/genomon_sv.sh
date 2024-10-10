@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export PYTHONNOUSERSITE=1
 
 function print_meta_info () {
@@ -19,7 +20,7 @@ if [ ! -e  ${output_dir}/sv/${tumor_name} ]; then
     mkdir -p ${output_dir}/sv/${tumor_name}
 fi
 
-singularity exec $genomon_img GenomonSV parse \
+$container_bin exec $genomon_img GenomonSV parse \
                 ${tumor_bam} \
                 ${output_dir}/sv/${tumor_name}/${tumor_name} \
                 ${genomon_sv_parse_param} || exit $?
@@ -28,7 +29,7 @@ if [ $normal_name != None ]; then
      genomon_sv_filt_param="$genomon_sv_filt_param --matched_control_bam $normal_bam"
 fi
 
-singularity exec $genomon_img GenomonSV filt \
+$container_bin exec $genomon_img GenomonSV filt \
                  ${tumor_bam} \
                  ${output_dir}/sv/${tumor_name}/${tumor_name} \
                  ${ref_fa} \
@@ -43,7 +44,7 @@ cat  ${output_dir}/sv/${tumor_name}/${tumor_name}.genomonSV.result.txt.tmp >>  $
 
 rm -rf  ${output_dir}/sv/${tumor_name}/${tumor_name}.genomonSV.result.txt.tmp
  
-singularity exec $genomon_img sv_utils filter \
+$container_bin exec $genomon_img sv_utils filter \
             ${output_dir}/sv/${tumor_name}/${tumor_name}.genomonSV.result.txt \
             ${output_dir}/sv/${tumor_name}/${tumor_name}.genomonSV.result.filt.txt.tmp \
             ${sv_utils_param} || exit $?

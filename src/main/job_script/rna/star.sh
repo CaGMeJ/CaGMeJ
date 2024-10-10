@@ -2,8 +2,9 @@ sleep $sleep_time
 export PATH=/usr/local/package/python/3.6.5/bin:$PATH
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx16g -Xms32m -XX:ConcGCThreads=8"
 
 export SINGULARITY_BINDPATH=$SINGULARITY_BINDPATH,/home,/share
@@ -42,21 +43,21 @@ do
     RG="${RG}\t,\t${sample_csv["RG${i}_$(( $i + $fastq_max ))"]}"
 done
 
-singularity exec $STAR_img STAR --genomeDir ${genome_lib_dir} \
+$container_bin exec $STAR_img STAR --genomeDir ${genome_lib_dir} \
      $star_option \
      --readFilesIn $R1 $R2 \
      --outSAMattrRGline `echo -e $RG` \
      --outFileNamePrefix $output_dir/${sample_name}. 
-singularity exec $STAR_img samtools sort -@ 8 $output_dir/${sample_name}.Aligned.out.bam \
+$container_bin exec $STAR_img samtools sort -@ 8 $output_dir/${sample_name}.Aligned.out.bam \
   -O bam > $output_dir/${sample_name}.Aligned.sortedByCoord.out.bam
-singularity exec $STAR_img samtools index $output_dir/${sample_name}.Aligned.sortedByCoord.out.bam
+$container_bin exec $STAR_img samtools index $output_dir/${sample_name}.Aligned.sortedByCoord.out.bam
 
-singularity exec $picard_img java -jar /picard.jar MarkDuplicates \
+$container_bin exec $picard_img java -jar /picard.jar MarkDuplicates \
       I=$output_dir/${sample_name}.Aligned.sortedByCoord.out.bam \
       O=$output_dir/${sample_name}.markdup.bam \
       M=$output_dir/${sample_name}.metrics 
 
-singularity exec $STAR_img samtools index $output_dir/${sample_name}.markdup.bam
+$container_bin exec $STAR_img samtools index $output_dir/${sample_name}.markdup.bam
 
 rm $output_dir/${sample_name}.Aligned.out.bam
 set +xv

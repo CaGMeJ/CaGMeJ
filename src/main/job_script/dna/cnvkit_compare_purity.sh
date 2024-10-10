@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 
 set -xv
 if [ `cat ${output_dir}/facets/$tumor_name/${tumor_name}.out.purity.tsv | wc -l` -gt 2 ]; then
@@ -26,7 +27,7 @@ if [ `cat ${output_dir}/${tumor_name}.markdup.cnr | wc -l` -gt 1 ]; then
     if [ "$male_reference_flag" = T ]; then
         sex_reference="--male-reference"
     fi
-    singularity  exec $cnvkit_img cnvkit.py call \
+    $container_bin exec $cnvkit_img cnvkit.py call \
         ${output_dir}/${tumor_name}.markdup.cns \
         $sex_reference \
         -m clonal \
@@ -39,11 +40,11 @@ if [ `cat ${output_dir}/${tumor_name}.markdup.cnr | wc -l` -gt 1 ]; then
     grep $grep_option   ${output_dir}/${tumor_name}.markdup.cnr >>  ${output_dir}/${tumor_name}.cnr
     grep $grep_option  ${output_dir}/${tumor_name}.purity_calibrated.call.cns >> ${output_dir}/${tumor_name}.cns
 
-    singularity exec $cnvkit_img cnvkit.py scatter  -s ${output_dir}/${tumor_name}.cn{s,r} -o ${output_dir}/${tumor_name}-scatter_purity_calibrated.png
+    $container_bin exec $cnvkit_img cnvkit.py scatter  -s ${output_dir}/${tumor_name}.cn{s,r} -o ${output_dir}/${tumor_name}-scatter_purity_calibrated.png
  
-    singularity exec $cnvkit_img cnvkit.py diagram $sex_reference -s ${output_dir}/${tumor_name}.cn{s,r} -o ${output_dir}/${tumor_name}-diagram_purity_calibrated.pdf  
+    $container_bin exec $cnvkit_img cnvkit.py diagram $sex_reference -s ${output_dir}/${tumor_name}.cn{s,r} -o ${output_dir}/${tumor_name}-diagram_purity_calibrated.pdf  
 
-    singularity exec $cnvkit_img cnvkit.py export vcf $sex_reference ${output_dir}/${tumor_name}.purity_calibrated.call.cns ${cnvkit_export_option}  -o ${output_dir}/${tumor_name}.purity_calibrated.call.cns.vcf
+    $container_bin exec $cnvkit_img cnvkit.py export vcf $sex_reference ${output_dir}/${tumor_name}.purity_calibrated.call.cns ${cnvkit_export_option}  -o ${output_dir}/${tumor_name}.purity_calibrated.call.cns.vcf
 
     rm ${output_dir}/${tumor_name}.cns
     rm ${output_dir}/${tumor_name}.cnr

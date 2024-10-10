@@ -1,14 +1,15 @@
 sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0 
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file 
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 
 set -xv
 set -e
 
-singularity exec $samtools_img samtools view ${cram_view_option} -C -T ${ref_fa} ${bam_file} > ${output_dir}/bam/${sample_name}/${sample_name}.markdup.cram
-singularity exec $samtools_img samtools index ${cram_index_option}  ${output_dir}/bam/${sample_name}/${sample_name}.markdup.cram
+$container_bin exec $samtools_img samtools view ${cram_view_option} -C -T ${ref_fa} ${bam_file} > ${output_dir}/bam/${sample_name}/${sample_name}.markdup.cram
+$container_bin exec $samtools_img samtools index ${cram_index_option}  ${output_dir}/bam/${sample_name}/${sample_name}.markdup.cram
 
 cwd=`pwd`
 cd ${output_dir}/bam/${sample_name}

@@ -2,8 +2,9 @@ sleep $sleep_time
 
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 
 set -xv
 
@@ -44,7 +45,7 @@ seqz_file=${output_dir}/sequenza/${tumor_name}/seqz/${tumor_name}_${chr}_out.seq
 seqz_small_file=${output_dir}/sequenza/${tumor_name}/seqz/${tumor_name}_${chr}_small_out.seqz.gz
 
 
-singularity exec  $sequenza_utils_img sequenza-utils  bam2seqz \
+$container_bin exec  $sequenza_utils_img sequenza-utils  bam2seqz \
                 -gc ${gc_file} \
                 -F ${ref_fa} \
                 $bam2seqz_option \
@@ -56,7 +57,7 @@ if [ `zcat ${seqz_file} | head -2 | wc -l` = 1 ]; then
     return
 fi
 
-singularity exec  $sequenza_utils_img sequenza-utils  seqz_binning \
+$container_bin exec  $sequenza_utils_img sequenza-utils  seqz_binning \
                 -w ${window_size} \
                 -s ${seqz_file} \
                 -o ${seqz_small_file} || exit $?

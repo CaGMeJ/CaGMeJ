@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xms32m"
 export R_LIBS_USER='-'
 workdir=`pwd`
@@ -17,7 +18,7 @@ if [ $normal_bam = None ]; then
     flag=false
 fi
 cmd="
-singularity exec $gridss_img gridss \
+$container_bin exec $gridss_img gridss \
        $gridss_option \
        --reference $ref_fa \
        --output $output_dir/gridss/$tumor_name/${tumor_name}.gridss.vcf \

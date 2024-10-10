@@ -1,8 +1,9 @@
 sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$SINGULARITY_BINDPATH,/home,/share
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 
 set -xv
 
@@ -16,7 +17,7 @@ if [ ! -e $output_dir ]; then
 fi
 
 
-singularity exec $STAR_img  STAR-Fusion  \
+$container_bin exec $STAR_img  STAR-Fusion  \
                       --genome_lib_dir  ${genome_lib_dir} \
                       --chimeric_junction  ${input_file}  \
                       --output_dir  ${output_dir}  

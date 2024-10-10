@@ -1,8 +1,9 @@
 sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$SINGULARITY_BINDPATH,/home,/share
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 set -xv
 group_name="${tumor_name}_${normal_name}"
 expression_dir=${output_dir}/expression
@@ -17,7 +18,7 @@ if [ ! -e "${output_dir}/geneset" ]; then
 fi
 
 
-singularity exec $deseq2_img bash -c "R -q --vanilla --args ${expression_dir}/htseq ${output_dir} \
+$container_bin exec $deseq2_img bash -c "R -q --vanilla --args ${expression_dir}/htseq ${output_dir} \
                       ${geneset} \
                       ${pseudo_count} \
                       ${tumor_list} \

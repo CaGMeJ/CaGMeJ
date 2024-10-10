@@ -20,12 +20,14 @@ class sample_csv:
                          continue
                     if len(config) and mode != "":
                          self.sample_conf[mode].append(config)
-          assert  "fastq" in self.sample_conf.keys() or "bam_import" in self.sample_conf.keys(), file_path + ' must contain [fastq] or [bam_import]' 
+          assert  "fastq" in self.sample_conf.keys() or "bam_import" in self.sample_conf.keys() or "cram_import" in self.sample_conf.keys(), file_path + ' must contain [fastq], [bam_import] or [cram_import]' 
           self.sample_csv_path = file_path
           self.parser()                    
    
      def parser(self):
           self.bam_list = {}
+          self.cram_list = {}
+          self.bam_decoded_list = {}
           self.fastq_list = {}
           self.fastq_max = 0
           self.expression = []
@@ -55,8 +57,14 @@ class sample_csv:
           if "bam_import" in self.sample_conf.keys():
                for config in self.sample_conf["bam_import"]:
                     sample_name, bam_file = config.split(",")
-                    assert os.path.exists(bam_file + ".bai"), bam_file + ".bai soes not exist"
+                    assert os.path.exists(bam_file + ".bai"), bam_file + ".bai does not exist"
                     self.bam_list[sample_name] = bam_file
+
+          if "cram_import" in self.sample_conf.keys():
+               for config in self.sample_conf["cram_import"]:
+                    sample_name, cram_file = config.split(",")
+                    assert os.path.exists(cram_file + ".crai"), cram_file + ".crai does not exist"
+                    self.cram_list[sample_name] = cram_file
 
           if "expression" in self.sample_conf.keys():
                for config in self.sample_conf[ "expression"]:
@@ -114,6 +122,23 @@ class sample_csv:
                for sample_name, bam_file in self.bam_list.items():
                     file.write(sample_name + "," + bam_file + "\n")
 
+     def cram_csv(self, output_dir, markdup_decoded_bam_files):
+          config_type = "cram_import"
+          assert config_type in self.sample_conf.keys(), config_type + " is not defined in csv file."
+          assert len(self.sample_conf[config_type]), config_type + " is not defined in csv file."
+          config_dir = output_dir + "/config/"
+          os.makedirs(config_dir, exist_ok=True)
+          cram_csv = output_dir + "/config/cram_conf.csv"
+
+          for bam_decoded_file in markdup_decoded_bam_files:
+               sample_name = os.path.basename(bam_decoded_file).split('.')[0]
+               self.bam_decoded_list[sample_name] = bam_decoded_file
+
+          with open(cram_csv, mode = "w") as file:
+               file.write("sample_name,cram_file" + "\n")
+               for sample_name, cram_file in self.cram_list.items():
+                    file.write(sample_name + "," + cram_file + "\n")
+
      def sample_conf_csv(self, output_dir):
           config_dir = output_dir + "/config/"
           os.makedirs(config_dir, exist_ok=True)
@@ -162,7 +187,7 @@ class sample_csv:
           config_dir = output_dir + "/config/"
           os.makedirs(config_dir, exist_ok=True)
           file_path = config_dir  + "/" + config_type + "_conf.csv"
-          check_sample_name = set(list(self.bam_list.keys()) +  list(self.fastq_list.keys()) + ["None"])
+          check_sample_name = set(list(self.cram_list.keys()) + list(self.bam_list.keys()) +  list(self.fastq_list.keys()) + ["None"])
 
           with open(file_path, mode = "w") as file:
                file.write("tumor,normal,tumor_bam,normal_bam\n")
@@ -194,15 +219,19 @@ class sample_csv:
                     assert normal_name in check_sample_name, normal_name + " is not defined."
                     if tumor_name in self.bam_list:
                         tumor_bam = self.bam_list[tumor_name]
+                    elif tumor_name in self.bam_decoded_list:
+                        tumor_bam = self.bam_decoded_list[tumor_name]
                     if normal_name in self.bam_list:
                         normal_bam = self.bam_list[normal_name]
+                    elif normal_name in self.bam_decoded_list:
+                        normal_bam = self.bam_decoded_list[normal_name]
                     file.write(",".join([tumor_name, normal_name] + [tumor_bam, normal_bam]) + "\n")  
 
      def single_conf_csv(self, output_dir, config_type, enable, nucleic_acid_type):
           config_dir = output_dir + "/config/"
           os.makedirs(config_dir, exist_ok=True)
           file_path = config_dir  + "/" + config_type + "_conf.csv"
-          check_sample_name = set(list(self.bam_list.keys()) +  list(self.fastq_list.keys()) + ["None"])
+          check_sample_name = set(list(self.cram_list.keys()) + list(self.bam_list.keys()) +  list(self.fastq_list.keys()) + ["None"])
           with open(file_path, mode = "w") as file:
                file.write("sample_name,sample_bam\n")
                if enable:
@@ -234,13 +263,15 @@ class sample_csv:
                     assert sample_name in check_sample_name, sample_name + " is not defined."
                     if sample_name in self.bam_list:
                         sample_bam = self.bam_list[sample_name]
+                    elif sample_name in self.bam_decoded_list:
+                        sample_bam = self.bam_decoded_list[sample_name]
                     file.write(",".join([sample_name, sample_bam]) + "\n")
 
      def compare_conf_plus_csv(self, output_dir, config_type, plus, enable):
           config_dir = output_dir + "/config/"
           os.makedirs(config_dir, exist_ok=True)
           file_path = config_dir  + "/" + config_type + "_conf.csv"
-          check_sample_name = set(list(self.bam_list.keys()) +  list(self.fastq_list.keys()) + ["None"])
+          check_sample_name = set(list(self.cram_list.keys()) + list(self.bam_list.keys()) +  list(self.fastq_list.keys()) + ["None"])
           with open(file_path, mode = "w") as file:
                file.write("tumor,normal,tumor_bam,normal_bam," + plus + "\n")
                if enable:
@@ -271,8 +302,12 @@ class sample_csv:
                     assert normal_name in check_sample_name, normal_name + " is not defined."
                     if tumor_name in self.bam_list:
                         tumor_bam = self.bam_list[tumor_name]
+                    elif tumor_name in self.bam_decoded_list:
+                        tumor_bam = self.bam_decoded_list[tumor_name]
                     if normal_name in self.bam_list:
                         normal_bam = self.bam_list[normal_name]
+                    elif normal_name in self.bam_decoded_list:
+                        normal_bam = self.bam_decoded_list[normal_name]
                     file.write(",".join([tumor_name, normal_name] + [tumor_bam, normal_bam] + [plus]) + "\n")  
      
      def expression_conf(self, output_dir):

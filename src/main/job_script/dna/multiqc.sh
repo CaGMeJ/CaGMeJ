@@ -1,12 +1,13 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export PYTHONNOUSERSITE=1
 workdir=`pwd`
 set -xv
 
 cd $output_dir/qc
-singularity exec $multiqc_img multiqc .
+$container_bin exec $multiqc_img multiqc .
 
 cd $workdir

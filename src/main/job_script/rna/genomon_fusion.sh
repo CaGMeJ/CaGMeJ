@@ -1,8 +1,9 @@
 
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 export PYTHONNOUSERSITE=1
 set -xv
 if [ ! -e  ${output_dir}/genomon_fusion ]; then
@@ -15,7 +16,7 @@ if [ -f ${output_dir}/genomon_fusion/$sample_name/${sample_name}.star.log ]; the
     rm ${output_dir}/genomon_fusion/$sample_name/${sample_name}.star.log
 fi
 
-singularity exec $genomon_rna_img fusionfusion \
+$container_bin exec $genomon_rna_img fusionfusion \
     --star $chimeric_out_sam_file \
     --out  ${output_dir}/genomon_fusion/$sample_name \
     --reference_genome $ref_fa \
@@ -35,7 +36,7 @@ else
     mv ${output_dir}/genomon_fusion/$sample_name/star.fusion.result.txt ${output_dir}/genomon_fusion/$sample_name/${sample_name}.star.fusion.result.txt 
     mv ${output_dir}/genomon_fusion/$sample_name/fusion_fusion.result.txt ${output_dir}/genomon_fusion/$sample_name/${sample_name}.genomonFusion.result.txt 
 
-    singularity exec $genomon_rna_img fusion_utils filt \
+    $container_bin exec $genomon_rna_img fusion_utils filt \
         ${output_dir}/genomon_fusion/$sample_name/${sample_name}.genomonFusion.result.txt \
         ${output_dir}/genomon_fusion/$sample_name/${sample_name}.fusion.fusion.result.filt.txt \
         $fusion_utils_filt_option \

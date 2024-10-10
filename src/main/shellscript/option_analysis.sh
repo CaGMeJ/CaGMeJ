@@ -11,6 +11,7 @@ write_usage() {
   echo "-d, --del_tmp_dir     <delete tmp file which remain in /work directory>"
   echo "-v, --visualization   <dotfile in work directory  visualization disable>"
   echo "-p, --heap_size       <set environment variable NXF_OPTS>"
+  echo "-j, --java            <set java modulefile>"
   echo "-h, --help            <print help>"
   echo ""
 }
@@ -23,10 +24,11 @@ flag_output=false
 flag_qsub=false
 flag_del_tmp_dir=false
 flag_visual=false
+flag_java=false
 flag_heap=false
 
 genomon_conf=None
-
+java=java/8
 heap_size="-XX:+UseSerialGC -Xmx8g -Xms32m"
 
 skip_flag=false
@@ -92,6 +94,13 @@ do
         -v | --visualization)
             flag_visual=true
             shift 1
+            ;;
+
+        -j | --java)
+            flag_java=true
+            java="$2"
+            skip_flag=true
+            shift 2
             ;;
 
         -p | --heap_size)

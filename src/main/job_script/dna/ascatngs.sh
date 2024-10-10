@@ -1,7 +1,8 @@
 sleep $sleep_time
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 set -xv
 set -e
 
@@ -24,7 +25,7 @@ mkdir -p $out_dir
 # male: -gender XY
 # -genderChr Y or -genderChr chrY
 set +e
-singularity exec $ascatngs_img ascat.pl \
+$container_bin exec $ascatngs_img ascat.pl \
   -outdir $out_dir \
   -tumour $tumor_bam \
   -normal $normal_bam \
@@ -32,7 +33,7 @@ singularity exec $ascatngs_img ascat.pl \
   -gender $gender \
   $ascatngs_option
 set -e
-tumor_name=`singularity exec $samtools_img samtools view -H $tumor_bam  | grep '^@RG' | awk '{for (i=1; i<=NF; i++) if($i ~ "SM:" )printf(substr($i,4) "\n")}' | sort | uniq `
+tumor_name=`$container_bin exec $samtools_img samtools view -H $tumor_bam  | grep '^@RG' | awk '{for (i=1; i<=NF; i++) if($i ~ "SM:" )printf(substr($i,4) "\n")}' | sort | uniq `
 if [ ! -e  $out_dir/${tumor_name}.copynumber.caveman.csv ]; then
     error=`grep "Error in ghs\[\[sample\]\] : subscript out of bounds" $out_dir/tmpAscat/logs/Sanger_CGP_Ascat_Implement_ascat.0.err`
     if [ ! "$error" ]; then

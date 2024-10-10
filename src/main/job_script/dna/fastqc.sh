@@ -8,8 +8,9 @@ fi
 
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles/
-module load singularity/3.7.0
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 set -xv
-singularity exec $fastqc_img fastqc $fastqc_option -o $output_dir $fastq
+$container_bin exec $fastqc_img fastqc $fastqc_option -o $output_dir $fastq
 set +xv

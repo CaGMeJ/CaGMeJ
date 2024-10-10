@@ -1,8 +1,9 @@
 sleep $sleep_time
 source /etc/profile.d/modules.sh
 module use /usr/local/package/modulefiles
-module load singularity/3.7.0 
-export SINGULARITY_BINDPATH=$singularity_bindpath
+module load $container_module_file 
+export SINGULARITY_BINDPATH=$container_bindpath
+export APPTAINER_BINDPATH=$container_bindpath
 set -xv
 set -e
 host=$ref_fa
@@ -14,7 +15,7 @@ work_dir=$output_dir/survirus/$sample_name/${virus_type}
 if [ ! -e $work_dir ]; then
     mkdir -p  $work_dir
 fi
-singularity exec $survirus_img python2 /SurVirus-master/surveyor.py \
+$container_bin exec $survirus_img python2 /SurVirus-master/surveyor.py \
                 --wgs \
                 --threads $THREADS \
                 --bwa bwa \

@@ -1,7 +1,7 @@
 sleep $sleep_time
-source /etc/profile.d/modules.sh
-module use /usr/local/package/modulefiles/
-module load python/3.6
+#source /etc/profile.d/modules.sh
+#module use /usr/local/package/modulefiles/
+#module load python/3.6
 
 
 fastqc_dir=${output_dir}/qc/fastqc/fastqc
