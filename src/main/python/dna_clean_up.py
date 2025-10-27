@@ -74,48 +74,67 @@ if ref_fa_copy_enable == "true":
     if os.path.exists(my_ref_fa_dir):
         shutil.rmtree(my_ref_fa_dir)
 
+file_list = []
+
 if cram_enable == "true":
     for sample in  bam_sample_list:
-               file_list = ["{}/bam/{}/{}.markdup.bam".format(output_dir, sample, sample),
-                            "{}/bam/{}/{}.markdup.bam.bai".format(output_dir, sample, sample)]
+               file_list.extend([
+                   "{}/bam/{}/{}.markdup.bam".format(output_dir, sample, sample),
+                   "{}/bam/{}/{}.markdup.bam.bai".format(output_dir, sample, sample)
+                   ])
+
     for f in file_list:
         if os.path.isfile(f):
             os.remove(f)
 
+file_list = []
+
 if  sequenza_bam2seqz_enable == "true":
     for Chr in expr(chr_list):
            for sample in  sequenza_sample_list:
-               file_list = ["{}/sequenza/{}/seqz/{}_{}_out.seqz.gz".format(output_dir, sample, sample, Chr),
-                            "{}/sequenza/{}/seqz/{}_{}_out.seqz.gz.tbi".format(output_dir, sample, sample, Chr),
-                            "{}/sequenza/{}/seqz/{}_{}_small_out.seqz.gz".format(output_dir, sample, sample, Chr),
-                            "{}/sequenza/{}/seqz/{}_{}_small_out.seqz.gz.tbi".format(output_dir, sample, sample, Chr),
-                            "{}/sequenza/{}/seqz/{}_{}.hg19.bam".format(output_dir, sample, sample, Chr),
-                            "{}/sequenza/{}/seqz/{}_{}.hg19.sorted.bam".format(output_dir, sample, sample, Chr),
-                            "{}/sequenza/{}/seqz/{}_{}.hg19.sorted.bam.bai".format(output_dir, sample, sample, Chr)]
+               file_list.extend([
+                   "{}/sequenza/{}/seqz/{}_{}_out.seqz.gz".format(output_dir, sample, sample, Chr),
+                   "{}/sequenza/{}/seqz/{}_{}_out.seqz.gz.tbi".format(output_dir, sample, sample, Chr),
+                   "{}/sequenza/{}/seqz/{}_{}_small_out.seqz.gz".format(output_dir, sample, sample, Chr),
+                   "{}/sequenza/{}/seqz/{}_{}_small_out.seqz.gz.tbi".format(output_dir, sample, sample, Chr),
+                   "{}/sequenza/{}/seqz/{}_{}.hg19.bam".format(output_dir, sample, sample, Chr),
+                   "{}/sequenza/{}/seqz/{}_{}.hg19.sorted.bam".format(output_dir, sample, sample, Chr),
+                   "{}/sequenza/{}/seqz/{}_{}.hg19.sorted.bam.bai".format(output_dir, sample, sample, Chr)
+                   ])
+
                for f in file_list:
                    if os.path.isfile(f):
                        os.remove(f)
 
+file_list = []
+
 if facets_enable == "true":
     for Chr in expr(facets_chr_list):
         for sample in  facets_sample_list:
-           file_list = ["{}/facets/{}/{}.{}.csv".format(output_dir, sample, sample, Chr),
-                        "{}/facets/{}/{}.{}.csv.gz".format(output_dir, sample, sample, Chr)]
+           file_list.extend([
+               "{}/facets/{}/{}.{}.csv".format(output_dir, sample, sample, Chr),
+               "{}/facets/{}/{}.{}.csv.gz".format(output_dir, sample, sample, Chr)
+               ])
+
            for f in file_list:
                    if os.path.isfile(f):
                        os.remove(f)
+
+file_list = []
 
 if genomon_mutation_enable == "true":
     with open(interval_list) as lines:
         for line in lines:
             interval = line.rstrip("\n")
             for sample in  genomon_mutation_sample_list:
-                file_list = ["{}/mutation/{}/{}.breakpoint_mutations.{}.txt".format(output_dir, sample, sample, interval),
-                             "{}/mutation/{}/{}.fisher_mutations.{}.txt".format(output_dir, sample, sample, interval),
-                             "{}/mutation/{}/{}.indel_mutations.{}.txt".format(output_dir, sample, sample, interval),
-                             "{}/mutation/{}/{}.realignment_mutations.{}.txt".format(output_dir, sample, sample, interval),
-                             "{}/mutation/{}/{}.simplerepeat_mutations.{}.txt".format(output_dir, sample, sample, interval),
-                             "{}/mutation/{}/{}_mutations_candidate.{}.hg38_multianno.txt".format(output_dir, sample, sample, interval)]
+                file_list.extend([
+                    "{}/mutation/{}/{}.breakpoint_mutations.{}.txt".format(output_dir, sample, sample, interval),
+                    "{}/mutation/{}/{}.fisher_mutations.{}.txt".format(output_dir, sample, sample, interval),
+                    "{}/mutation/{}/{}.indel_mutations.{}.txt".format(output_dir, sample, sample, interval),
+                    "{}/mutation/{}/{}.realignment_mutations.{}.txt".format(output_dir, sample, sample, interval),
+                    "{}/mutation/{}/{}.simplerepeat_mutations.{}.txt".format(output_dir, sample, sample, interval),
+                    "{}/mutation/{}/{}_mutations_candidate.{}.hg38_multianno.txt".format(output_dir, sample, sample, interval)
+                    ])
 
                 for f in file_list:
                    if os.path.isfile(f):
