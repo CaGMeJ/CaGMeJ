@@ -44,3 +44,12 @@ bash  build/main/CaGMeJ.sh  \
                    --output_dir     {出力先ディレクトリ} \
                    --nextflow_conf  {RNAパイプライン設定ファイル}
 ```
+
+Contact
+--------
+このパイプラインは片山琴絵によって管理されています。
+
+https://nanoporetech.com/ja/about/events/nanopore-days/wymm-tour-tokyo-2025
+
+https://hmi-genome-seq.com/en
+
