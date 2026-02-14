@@ -48,6 +48,7 @@ with open(nf_cfg) as f:
     battenberg_enable = True if t["params"]["battenberg_enable"] == "true" else False
     cram2bam_enable = True if t["params"]["cram2bam_enable"] == "true" else False
     strelka_enable = True if t["params"]["strelka_enable"] == "true" else False
+    pindel_enable = True if t["params"]["cgpPindel_enable"] == "true" else False
 
 #####################
 #
@@ -85,7 +86,7 @@ else:
     sc.bam_csv(output_dir, markdup_files)
 sc.sample_conf_csv(output_dir)
 sc.fastqc_conf_csv(output_dir)
-sc.compare_conf_plus_csv(output_dir, "mutation_call", "control_panel", genomon_mutation_enable | parabricks_cnvkit_enable | parabricks_mutect_enable | sequenza_bam2seqz_enable)
+sc.compare_conf_plus_csv(output_dir, "mutation_call", "control_panel", genomon_mutation_enable | parabricks_cnvkit_enable | parabricks_mutect_enable | sequenza_bam2seqz_enable | pindel_enable)
 sc.single_conf_csv(output_dir, "deepvariant", parabricks_deepvariant_enable, "dna")
 sc.compare_conf_plus_csv(output_dir, "sv_detection", "control_panel", genomon_sv_enable | itd_assembler_enable)
 sc.compare_conf_csv(output_dir, "MSI", msisensor_enable)

@@ -4,6 +4,7 @@ module use /usr/local/package/modulefiles/
 module load $container_module_file
 export SINGULARITY_BINDPATH=$container_bindpath
 export APPTAINER_BINDPATH=$container_bindpath
+export OMP_NUM_THREADS=1
 set -xv
 group_name="${tumor_name}_${normal_name}"
 expression_dir=${output_dir}/expression
